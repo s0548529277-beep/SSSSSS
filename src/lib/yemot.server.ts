@@ -1,0 +1,230 @@
+// Small, dependency-free ימות המשיח (Yemot Hamashiach) helpers — same house
+// style as twilio.server.ts: no SDK, just the bespoke plain-text protocol
+// their IVR2 "שלוחת API" extension speaks. Confirmed against the open-source
+// yemot-router2 library's source (github.com/ShlomoCode/yemot-router2) since
+// Yemot doesn't publish a public REST reference. The "voice" read mode below
+// is confirmed working against a real live call; two other directives were
+// tried and did NOT work reliably live, and were removed rather than kept
+// around half-working: a "tap" (keypad digit) read mode for a numbered menu
+// ("לא הקשת כמות מספרים נכונה" — replaced by the speech-keyword menu in
+// voice-menu.server.ts), and routing_yemot for live-transferring to a human
+// ("השלוחה אליה ביקשתם לעבור אינה פעילה עקב חוסר בהגדרות" — it needs a real
+// extension configured on Yemot's own side, not just a raw phone number; the
+// Yemot line now always offers to leave a message instead — see
+// api.yemot.ivr.ts). So this file only ever asks for voice, never transfers.
+//
+// Protocol shape: Yemot POSTs (or GETs) call info as form fields —
+// ApiCallId (a stable id for the whole call, our session key), ApiPhone
+// (caller's number), and hangup=yes once the caller disconnects. Our
+// response is a single plain-text line built from `key=value` directives:
+//   id_list_message=t-<text>          → speak text, then re-hit our URL
+//   read=t-<text>=<valName>,...       → speak text, then listen for speech
+//                                        and re-hit our URL with that
+//                                        transcript under `valName`
+//   go_to_folder=hangup               → end the call
+// Multiple directives in one response are joined with `&`, matching every
+// other directive pair Yemot documents (ApiCallId etc.) being query-string
+// shaped.
+
+/** Parses an incoming Yemot webhook request (GET query string or POST form body) into a plain object. */
+export async function parseYemotParams(request: Request): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  const url = new URL(request.url);
+  for (const [k, v] of url.searchParams.entries()) out[k] = v;
+  if (request.method === "POST") {
+    try {
+      const formData = await request.formData();
+      for (const [k, v] of formData.entries()) out[k] = String(v);
+    } catch {
+      // Some Yemot configs send POST with no body (everything in the query
+      // string) — formData() throws on an empty/non-form body, ignore it.
+    }
+  }
+  return out;
+}
+
+// Characters the Yemot protocol itself uses as delimiters, so any text we
+// embed inside a directive (a message the caller hears) has to have them
+// stripped first — same set the yemot-router2 library sanitizes, and for
+// the same reason: a stray "." would be read as a new message segment, a
+// stray "=" or "&" would be read as a new directive.
+const YEMOT_UNSAFE_CHARS = /[.\-"'&|=]/g;
+
+function sanitize(text: string): string {
+  return text.replace(YEMOT_UNSAFE_CHARS, " ").replace(/\s+/g, " ").trim();
+}
+
+/** One `t-<text>` message segment for id_list_message/read, sanitized for the protocol's delimiter characters. */
+function textSegment(text: string): string {
+  return `t-${sanitize(text)}`;
+}
+
+function yemotResponse(body: string): Response {
+  return new Response(body, { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+}
+
+/**
+ * Speaks `text` in Hebrew (Yemot's own built-in TTS — no audio file to
+ * generate), then listens for the caller's next spoken reply and re-hits
+ * this same extension's URL with the transcript under the `speech` field.
+ */
+export function yemotSayAndListen(text: string): Response {
+  // read=<prompt>=<valName>,<re_enter:no>,voice,<lang>,<block_typing>,
+  //      <max_digits>,<quiet_max>
+  // re_enter=no: don't re-ask the same question if `speech` was already
+  // filled on a prior hit of this call — we always want a *new* answer.
+  //
+  // quiet_max=4 (2026-09-08): was previously left blank — Yemot's own
+  // unstated default — until a direct report that Yemot's own NATIVE
+  // "לא זוהה דיבור" message (error M1613, "speech not recognized",
+  // confirmed via Yemot's own forum — this app never speaks that phrase
+  // itself, so it can only be Yemot's own STT engine giving up) sometimes
+  // plays right after an ordinary, successful bot reply. Field order
+  // confirmed against yemot-router2's own source this same day
+  // (makeSttModeRead in response-functions.js: valName, re_enter, "voice",
+  // lang, block_typing, max_digits, quiet_max, max_length,
+  // use_records_recognition_engine) — not guessed, see yemotSayThenResume's
+  // doc comment for the mistake an earlier, unconfirmed guess at this same
+  // field caused. An explicit, generous 4-second value can only give the
+  // recognizer MORE patience before deciding she's done talking than
+  // whatever the unknown default was — never less — so this is a safe
+  // change either way. Not guaranteed to fully fix it: "didn't recognize
+  // speech" can also be genuine low STT confidence on Yemot's own engine
+  // (background noise, a soft reply) that no parameter here controls —
+  // worth confirming against a real call.
+  return yemotResponse(`read=${textSegment(text)}=speech,no,voice,he,,,4`);
+}
+
+/** Speaks `text` in Hebrew and ends the call. */
+export function yemotSayAndHangup(text: string): Response {
+  return yemotResponse(`id_list_message=${textSegment(text)}&go_to_folder=hangup`);
+}
+
+// A previous version of this helper (yemotSayThenContinue) used a BARE
+// id_list_message — no go_to_folder, no read — banking on an unconfirmed
+// assumption (sourced from yemot-router2's docs, never actually exercised
+// live) that Yemot auto-continues to the next hit on its own after a bare
+// id_list_message instead of just... stopping. It shipped OFF by default
+// for exactly that reason and was never turned on. Replaced below with
+// yemotSayThenResume, built entirely out of the SAME `read`/speech-listen
+// directive every other turn in this app already uses successfully, every
+// single call — zero new protocol risk.
+
+/**
+ * Speaks `text` (optionally preceded by a short hold-tone/music segment —
+ * see `musicOnHoldId`) and then listens briefly for speech, same as
+ * yemotSayAndListen — but built for a DIFFERENT purpose: hiding AI
+ * "thinking" latency (see THINKING_FILLER_KEY in voice-phrases.server.ts).
+ * The caller isn't actually being asked anything here; we just want Yemot
+ * to re-hit this URL soon after so the real (slow) work can run. Rather
+ * than the unconfirmed "bare id_list_message auto-continues" behavior this
+ * used to rely on, this reuses the READ directive itself — proven, in
+ * production, on every single turn already — so if she stays quiet (the
+ * expected case, since nothing was actually asked), Yemot's own normal
+ * "no speech within the wait window" behavior re-hits us with no answer,
+ * landing in the exact same `!hasAnswer` handling every other silent hit
+ * already goes through. If she DOES say something in that window (adding
+ * more detail, repeating herself), that comes back as ordinary `speech` —
+ * api.yemot.ivr.ts's "ai_pending" handling covers both cases.
+ *
+ * `musicOnHoldId` is an optional Yemot system music-file id (the studio
+ * owner finds this in Yemot's own ניהול panel → קבצי מערכת/מוזיקה — it is
+ * NOT something this codebase can discover or guess, so it's admin-entered
+ * text, not a hardcoded default) — when set, plays that music/tone for up
+ * to a couple of seconds BEFORE the spoken text, giving an audible cue
+ * that isn't just Yemot's TTS voice. Left unset, only the spoken phrase
+ * plays (same as before). Per makeMessagesData in yemot-router2's own
+ * source (github.com/ShlomoCode/yemot-router2, lib/response-functions.js),
+ * a `music_on_hold` segment is `h-<musicName>` or `h-<musicName>,<maxSec>`,
+ * joined with other segments by `.` — same message-list format
+ * `id_list_message`/`read` both share.
+ */
+export function yemotSayThenResume(text: string, musicOnHoldId?: string | null): Response {
+  const holdSegment = musicOnHoldId ? `h-${sanitize(musicOnHoldId)},2.` : "";
+  // REVERTED 2026-09-08: this used to add `,,,1` — quiet_max=1, one whole
+  // second — to make Yemot give up waiting for speech quickly, since she
+  // wasn't actually asked a question. Per a direct report, the resume that
+  // follows sometimes landed somewhere wrong (fell through to "leave a
+  // message" instead of actually running the deferred AI check) — and per
+  // yemotSayAndListen's own doc comment above, this same session confirmed
+  // (via yemot-router2's real source, not a guess) that quiet_max genuinely
+  // is a live max-silence-before-giving-up control on Yemot's STT engine.
+  // A single second is an extremely tight window for that engine's own
+  // audio pipeline, independent of whether she says anything — plausible
+  // enough as the cause that, combined with a live bug report squarely
+  // hitting this exact mechanism, the safe move is to stop gambling on it.
+  // Reverting to the plain, proven 4-field format (same as
+  // yemotSayAndListen without an explicit quiet_max) was already this
+  // function's own pre-agreed fallback plan ("the worst case is simply
+  // Yemot's own normal default wait — never a dropped call") — just
+  // actually taking it now that there's a real report to act on, instead
+  // of a hypothetical one.
+  return yemotResponse(`read=${holdSegment}${textSegment(text)}=speech,no,voice,he`);
+}
+
+// Yemot's own built-in typing_playback_mode presets that ALSO fix the
+// required digit count (min_digits === max_digits) — used instead of a
+// hand-picked count specifically because a PREVIOUS keypad attempt on this
+// exact line failed live with "לא הקשת כמות מספרים נכונה" (wrong digit
+// count), which is exactly the failure mode a min/max mismatch produces.
+// "Date" = DDMMYYYY (8 digits), "Time" = HHMM in 24h format (4 digits) —
+// both confirmed against yemot-router2's own source (an open-source
+// wrapper around this same raw protocol; Yemot has no public reference),
+// specifically its makeTapModeRead in response-functions.js, which cites
+// Yemot's own docs (f2.freeivr.co.il/post/77520) for these exact pairs.
+const TAP_MODE_DIGITS: Record<string, { min: number; max: number }> = {
+  Date: { min: 8, max: 8 },
+  Time: { min: 4, max: 4 },
+};
+
+export type YemotTapOptions = {
+  /** Yemot's built-in playback/validation presets — "Date"/"Time" also fix the digit count (see TAP_MODE_DIGITS); "Digits" just reads the typed digits back for confirmation with no forced count. */
+  mode?: "Date" | "Time" | "Digits";
+  /** Only the digits in this list may be typed (e.g. [1,2,3,4,5,6] for a 1-6 duration choice) — Yemot itself rejects anything else instead of this app finding out after the fact. */
+  digitsAllowed?: number[];
+  /** Overrides the preset (or sets it directly with no mode) — omit to use the preset's own count. */
+  minDigits?: number;
+  maxDigits?: number;
+  secWait?: number;
+};
+
+/**
+ * Speaks `text` then listens for KEYPAD digits (not speech) — the DTMF
+ * input option for the no-AI booking flow (voice-noai-booking.server.ts).
+ * Raw directive format confirmed against yemot-router2's own source
+ * (response-functions.js, makeTapModeRead) rather than guessed at, since
+ * Yemot itself has no public API reference:
+ *   read=<msg>=<valName>,<re_enter>,<max_digits>,<min_digits>,<sec_wait>,
+ *        <typing_playback_mode>,<block_asterisk>,<block_zero>,
+ *        <replace_char>,<digits_allowed joined by '.'>,<amount_attempts>,
+ *        <allow_empty>,<empty_val>,<block_change_keyboard>
+ * The typed value comes back on the NEXT hit as `digits`, not `speech` —
+ * callers must read `params.digits` while in a stage that used this.
+ */
+export function yemotSayAndListenTap(text: string, opts: YemotTapOptions = {}): Response {
+  const preset = opts.mode ? TAP_MODE_DIGITS[opts.mode] : undefined;
+  const minDigits = opts.minDigits ?? preset?.min ?? 1;
+  const maxDigits = opts.maxDigits ?? preset?.max ?? "";
+  const tapOps = [
+    "digits", // valName — read back on the next hit as params.digits
+    "no", // re_enter_if_exists: always want a fresh answer, same as the speech read above
+    maxDigits,
+    minDigits,
+    opts.secWait ?? 9,
+    opts.mode ?? "No",
+    "no", // block_asterisk_key
+    "no", // block_zero_key
+    "", // replace_char
+    opts.digitsAllowed ? opts.digitsAllowed.join(".") : "",
+    "", // amount_attempts
+    "", // allow_empty
+    "", // empty_val
+    "", // block_change_keyboard
+  ];
+  return yemotResponse(`read=${textSegment(text)}=${tapOps.join(",")}`);
+}
+
+/** Acknowledges Yemot's own end-of-call notification (hangup=yes) — no directive needed, just a 200. */
+export function yemotAck(): Response {
+  return yemotResponse("");
+}

@@ -1,0 +1,356 @@
+import { heError } from "@/lib/he-errors";
+import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
+import { z } from "zod";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { EmailDatalist } from "@/components/EmailDatalist";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/lib/auth";
+import { MIN_PIN } from "@/lib/password";
+import { signInWithPhoneOrEmail, signUpWithPhoneOrEmail, requestPhoneResetCode, resetPasswordWithPhoneCode } from "@/lib/auth.functions";
+import { GuestContinueButton } from "@/components/GuestContinueButton";
+import { toast } from "sonner";
+
+const searchSchema = z.object({ redirect: z.string().optional() });
+
+export const Route = createFileRoute("/auth")({
+  validateSearch: searchSchema,
+  component: AuthPage,
+  head: () => ({ meta: [
+    { title: "התחברות | Sport Plus" },
+    { name: "description", content: "התחברו או צרו חשבון ב-Sport Plus — כניסה מאובטחת לכרטיסיית לקוח, הזמנות ושריון סטודיו בבית שמש." },
+    { property: "og:title", content: "התחברות | Sport Plus" },
+    { property: "og:description", content: "התחברו או צרו חשבון ב-Sport Plus — כניסה מאובטחת לכרטיסיית לקוח, הזמנות ושריון סטודיו בבית שמש." },
+    { property: "og:url", content: "https://sportplus.co.il/auth" },
+    { name: "robots", content: "noindex, follow" },
+  ], links: [{ rel: "canonical", href: "https://sportplus.co.il/auth" }] }),
+});
+
+function AuthPage() {
+  const { user } = useAuth();
+  const nav = useNavigate();
+  const { redirect } = useSearch({ from: "/auth" });
+  const [tab, setTab] = useState<"signin" | "signup">("signin");
+  const [busy, setBusy] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [resetMode, setResetMode] = useState<"email" | "phone">("email");
+  const [resetPhone, setResetPhone] = useState("");
+  const [phoneResetStep, setPhoneResetStep] = useState<"request" | "confirm">("request");
+  const [resetCode, setResetCode] = useState("");
+  const [resetNewPassword, setResetNewPassword] = useState("");
+
+  useEffect(() => {
+    if (user) nav({ to: (redirect as any) || "/account" });
+  }, [user, nav, redirect]);
+
+  const doSignIn = useServerFn(signInWithPhoneOrEmail);
+  const doSignUp = useServerFn(signUpWithPhoneOrEmail);
+  const doRequestPhoneReset = useServerFn(requestPhoneResetCode);
+  const doConfirmPhoneReset = useServerFn(resetPasswordWithPhoneCode);
+
+  const signIn = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setBusy(true);
+    const fd = new FormData(e.currentTarget);
+    const identifier = String(fd.get("identifier"));
+    const password = String(fd.get("password"));
+    try {
+      const res = await doSignIn({ data: { identifier, password } });
+      if (!res.ok) {
+        toast.error(res.error);
+      } else {
+        const { error } = await supabase.auth.setSession(res.session);
+        if (error) toast.error(heError(error));
+      }
+    } catch (e2) {
+      toast.error(heError(e2, "ההתחברות נכשלה"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const sendReset = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const email = forgotEmail.trim();
+    if (!email) return;
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setBusy(false);
+    if (error) toast.error(heError(error));
+    else {
+      toast.success("שלחנו קישור לאיפוס סיסמה למייל שלך");
+      setForgotOpen(false);
+    }
+  };
+
+  const requestPhoneReset = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const phone = resetPhone.trim();
+    if (!phone) return;
+    setBusy(true);
+    try {
+      await doRequestPhoneReset({ data: { phone } });
+      toast.success("אם המספר הזה משויך לחשבון, תקבלי עכשיו שיחה עם קוד איפוס.");
+      setPhoneResetStep("confirm");
+    } catch (e2) {
+      toast.error(heError(e2, "השליחה נכשלה"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const confirmPhoneReset = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!resetCode.trim() || !resetNewPassword.trim()) return;
+    setBusy(true);
+    try {
+      const res = await doConfirmPhoneReset({ data: { phone: resetPhone.trim(), code: resetCode.trim(), newPassword: resetNewPassword } });
+      if (!res.ok) {
+        toast.error(res.error);
+      } else {
+        toast.success("הסיסמה עודכנה! אפשר להתחבר איתה עכשיו.");
+        setForgotOpen(false);
+        setPhoneResetStep("request");
+        setResetCode("");
+        setResetNewPassword("");
+      }
+    } catch (e2) {
+      toast.error(heError(e2, "עדכון הסיסמה נכשל"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+
+  const signUp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setBusy(true);
+    const fd = new FormData(e.currentTarget);
+    const rawEmail = String(fd.get("email") ?? "").trim();
+    try {
+      const res = await doSignUp({
+        data: {
+          fullName: String(fd.get("full_name")),
+          phone: String(fd.get("phone")),
+          email: rawEmail || undefined,
+          password: String(fd.get("password")),
+        },
+      });
+      if (!res.ok) {
+        toast.error(res.error);
+      } else {
+        const { error } = await supabase.auth.setSession(res.session);
+        if (error) toast.error(heError(error));
+        else toast.success("החשבון נוצר!");
+      }
+    } catch (e2) {
+      toast.error(heError(e2, "יצירת החשבון נכשלה"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const google = async () => {
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    if (result.error) toast.error("שגיאה בהתחברות עם Google");
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header />
+      <section className="container-page py-14 flex-1 flex items-center justify-center">
+        <div className="w-full max-w-md bg-card rounded-3xl p-8 md:p-10 border border-primary/10 shadow-[var(--shadow-soft)]">
+          <div className="text-center mb-8">
+            <div className="text-xs tracking-[0.3em] uppercase text-forest/70 mb-2">Sport Plus</div>
+            <h1 className="font-display text-4xl text-primary">ברוכים הבאים</h1>
+            <p className="text-muted-foreground text-sm mt-2">כרטיסיית לקוח מסודרת, היסטוריית הזמנות ואיסוף מהיר.</p>
+          </div>
+
+          <Button type="button" onClick={google} variant="outline" className="w-full h-11 rounded-full border-primary/20 gap-2">
+            <GoogleIcon /> התחברות עם Google
+          </Button>
+          <div className="mt-3">
+            <GuestContinueButton />
+          </div>
+          <p className="text-[11px] text-center text-muted-foreground mt-2">
+            אפשר להזמין גם ללא הרשמה — הפרטים יישמרו במצב אורח.
+          </p>
+          <div className="flex items-center gap-3 my-6 text-xs text-muted-foreground">
+            <span className="flex-1 h-px bg-border" /> או <span className="flex-1 h-px bg-border" />
+          </div>
+
+
+          <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
+            <TabsList className="w-full grid grid-cols-2 bg-cream">
+              <TabsTrigger value="signin">כניסה</TabsTrigger>
+              <TabsTrigger value="signup">חשבון חדש</TabsTrigger>
+            </TabsList>
+            <TabsContent value="signin">
+              <form onSubmit={signIn} className="space-y-4 mt-6">
+                <Field label="אימייל או טלפון" name="identifier" type="text" required dir="ltr" />
+                <Field label="סיסמה / קוד סודי" name="password" type="password" required minLength={MIN_PIN} />
+                <Button type="submit" disabled={busy} className="w-full rounded-full h-11">
+                  {busy ? "…" : "כניסה"}
+                </Button>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => setForgotOpen((v) => !v)}
+                    className="text-xs text-forest/80 hover:text-primary underline underline-offset-4"
+                  >
+                    שכחתי סיסמה
+                  </button>
+                </div>
+              </form>
+              {forgotOpen && (
+                <div className="mt-4 p-4 rounded-2xl bg-cream border border-primary/10 space-y-3">
+                  <div className="flex gap-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setResetMode("email")}
+                      className={`px-3 py-1.5 rounded-full ${resetMode === "email" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+                    >
+                      איפוס במייל
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setResetMode("phone")}
+                      className={`px-3 py-1.5 rounded-full ${resetMode === "phone" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+                    >
+                      איפוס בשיחה טלפונית
+                    </button>
+                  </div>
+
+                  {resetMode === "email" ? (
+                    <form onSubmit={sendReset} className="space-y-3">
+                      <p className="text-xs text-muted-foreground">הזינו את כתובת המייל ונשלח קישור לאיפוס סיסמה.</p>
+                      <Input
+                        type="email"
+                        required
+                        list="email-suggest-auth-forgot"
+                        placeholder="you@example.com"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                      />
+                      <EmailDatalist id="email-suggest-auth-forgot" value={forgotEmail} />
+                      <Button type="submit" disabled={busy} className="w-full rounded-full h-10">
+                        {busy ? "שולח…" : "שליחת קישור איפוס"}
+                      </Button>
+                    </form>
+                  ) : phoneResetStep === "request" ? (
+                    <form onSubmit={requestPhoneReset} className="space-y-3">
+                      <p className="text-xs text-muted-foreground">נחייג אליך ונקריא קוד איפוס בשיחה קולית.</p>
+                      <Input
+                        type="tel"
+                        dir="ltr"
+                        required
+                        placeholder="050-1234567"
+                        value={resetPhone}
+                        onChange={(e) => setResetPhone(e.target.value)}
+                      />
+                      <Button type="submit" disabled={busy} className="w-full rounded-full h-10">
+                        {busy ? "שולח…" : "לקבל שיחה עם קוד"}
+                      </Button>
+                    </form>
+                  ) : (
+                    <form onSubmit={confirmPhoneReset} className="space-y-3">
+                      <p className="text-xs text-muted-foreground">הקלידי את הקוד שנקרא לך בשיחה, ואת הסיסמה החדשה.</p>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        dir="ltr"
+                        required
+                        placeholder="קוד מהשיחה"
+                        value={resetCode}
+                        onChange={(e) => setResetCode(e.target.value)}
+                      />
+                      <Input
+                        type="password"
+                        inputMode="numeric"
+                        dir="ltr"
+                        required
+                        minLength={MIN_PIN}
+                        placeholder="סיסמה חדשה"
+                        value={resetNewPassword}
+                        onChange={(e) => setResetNewPassword(e.target.value)}
+                      />
+                      <div className="flex gap-2">
+                        <Button type="submit" disabled={busy} className="flex-1 rounded-full h-10">
+                          {busy ? "מעדכן…" : "עדכון סיסמה"}
+                        </Button>
+                        <Button type="button" variant="ghost" className="rounded-full h-10" onClick={() => setPhoneResetStep("request")}>
+                          לא קיבלתי קוד
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="signup">
+              <form onSubmit={signUp} className="space-y-4 mt-6">
+                <Field label="שם מלא" name="full_name" required />
+                <Field label="טלפון" name="phone" type="tel" required dir="ltr" />
+                <Field label="אימייל (אפשר להוסיף גם אחר כך)" name="email" type="email" dir="ltr" />
+                <Field label="קוד סודי (4 ספרות ומעלה)" name="password" type="password" required minLength={MIN_PIN} inputMode="numeric" placeholder="למשל 1234" />
+                <Button type="submit" disabled={busy} className="w-full rounded-full h-11">
+                  {busy ? "…" : "צור חשבון"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+
+          <p className="text-[11px] text-center text-muted-foreground mt-6">
+            הרשמה מהווה הסכמה ל<Link to="/" className="underline">תנאי השימוש</Link>.
+          </p>
+        </div>
+      </section>
+      <Footer />
+    </div>
+  );
+}
+
+function Field({ label, name, ...rest }: { label: string; name: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  // The email field stays uncontrolled (submit reads it via FormData like
+  // the rest of this form) — mirroring its text into local state just to
+  // drive the domain-suggestion datalist, without turning it into a
+  // React-controlled input.
+  const [emailDraft, setEmailDraft] = useState("");
+  const isEmail = rest.type === "email";
+  const listId = isEmail ? `email-suggest-auth-${name}` : undefined;
+  return (
+    <div>
+      <Label htmlFor={name}>{label}</Label>
+      <Input
+        id={name}
+        name={name}
+        className="mt-1"
+        list={listId}
+        onInput={isEmail ? (e) => setEmailDraft(e.currentTarget.value) : undefined}
+        {...rest}
+      />
+      {isEmail && <EmailDatalist id={listId!} value={emailDraft} />}
+    </div>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22z" />
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+    </svg>
+  );
+}

@@ -1,0 +1,557 @@
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { heError } from "@/lib/he-errors";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Header } from "@/components/Header";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
+import { useProfilePrefill } from "@/hooks/use-profile";
+import { EmailDatalist } from "@/components/EmailDatalist";
+import { requestPhotographySession } from "@/lib/photography.functions";
+import { PHOTOGRAPHY_HOURLY_RATE, PAYMENT_LABELS } from "@/lib/photography-options";
+import {
+  usePageGallery,
+  PAGE_IMAGE_KEYS,
+  BUILTIN_PHOTOGRAPHY_STUDIO,
+  BUILTIN_PHOTOGRAPHY_OUTDOOR,
+} from "@/lib/page-images";
+
+import { Camera, Sun, Trees, Sparkles, Clock, Phone, Mail, ExternalLink, ArrowLeft, CalendarDays, Heart } from "lucide-react";
+import michalLogoWordmark from "@/assets/michal-logo-wordmark.png";
+
+export const Route = createFileRoute("/studio-photography")({
+  head: () => ({
+    meta: [
+      { title: "צילומים עם מיכל סיבוני – סטודיו וחוץ | Sport Plus" },
+      {
+        name: "description",
+        content:
+          "סשן צילום בסטודיו או בטבע עם הצלמת מיכל סיבוני. חבילות ניו-בורן, משפחה ואירועים. 300 ₪ לשעה בסטודיו, וצילומי חוץ בטבע בתאום מראש.",
+      },
+      { property: "og:title", content: "צילומים עם מיכל סיבוני – סטודיו וחוץ" },
+      {
+        property: "og:description",
+        content: "חבילות צילום בסטודיו ובטבע – ניו בורן, משפחה, ילדים ואירועים.",
+      },
+      { property: "og:image", content: "https://michalsiboni.co.il/wp-content/uploads/2025/06/dsc04166_optimized-1-scaled.jpg" },
+      {
+        property: "og:url",
+        content: "https://sportplus.co.il/studio-photography",
+      },
+    ],
+    links: [
+      {
+        rel: "canonical",
+        href: "https://sportplus.co.il/studio-photography",
+      },
+    ],
+  }),
+  component: StudioPhotographyPage,
+});
+
+const PHONE = "0548529277";
+const EMAIL = "s0548529277@gmail.com";
+const MICHAL_SITE = "https://michalsiboni.co.il/";
+
+const STUDIO_PHOTOS = BUILTIN_PHOTOGRAPHY_STUDIO;
+const OUTDOOR_PHOTOS = BUILTIN_PHOTOGRAPHY_OUTDOOR;
+
+function StudioPhotographyPage() {
+  const [tab, setTab] = useState<"studio" | "outdoor">("studio");
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  const studioGallery = usePageGallery(PAGE_IMAGE_KEYS.photographyStudio);
+  const outdoorGallery = usePageGallery(PAGE_IMAGE_KEYS.photographyOutdoor);
+  // Built-ins + admin-managed photos, respecting deletions/order made in the admin gallery.
+  const photos = tab === "studio" ? studioGallery.images : outdoorGallery.images;
+
+  // --- Booking a session with Michal straight into the studio calendar ---
+  const nav = useNavigate();
+  const { user } = useAuth();
+  const profile = useProfilePrefill();
+  const bookSession = useServerFn(requestPhotographySession);
+  const [sending, setSending] = useState(false);
+  const [wizard, setWizard] = useState(false);
+  const [step, setStep] = useState(1);
+  const [book, setBook] = useState({
+    name: "",
+    phone: "",
+    date: "",
+    time: "10:00",
+    hours: "1",
+    sessionType: "משפחה",
+    email: "",
+    payment: "cash",
+    notes: "",
+  });
+  useEffect(() => {
+    if (!profile.loaded) return;
+    setBook((b) => ({ ...b, name: b.name || profile.fullName, phone: b.phone || profile.phone, email: b.email || profile.email }));
+  }, [profile.loaded, profile.fullName, profile.phone, profile.email]);
+
+  const bookPrice = Math.round(PHOTOGRAPHY_HOURLY_RATE * Number(book.hours || 0));
+
+  const submitBooking = async () => {
+    if (!book.name.trim() || !book.phone.trim() || !book.date) {
+      toast.error("נא למלא שם, טלפון ותאריך.");
+      return;
+    }
+    if (!user) {
+      toast.error("יש להתחבר כדי לקבוע מועד ביומן.");
+      nav({ to: "/auth" });
+      return;
+    }
+    setSending(true);
+    try {
+      const res = await bookSession({
+        data: {
+          session_date: book.date,
+          start_time: book.time,
+          hours: Number(book.hours),
+          contact_name: book.name.trim(),
+          contact_phone: book.phone.trim(),
+          contact_email: book.email.trim() || null,
+          payment_method: book.payment as "cash" | "transfer" | "bit" | "later",
+          session_type: book.sessionType,
+          location: tab,
+          notes: book.notes || null,
+        },
+      });
+      toast.success("הבקשה נקלטה ביומן הסטודיו ✓");
+      setBook((b) => ({ ...b, notes: "" }));
+      setWizard(false);
+      nav({ to: "/photo-thanks/$id", params: { id: res.id } });
+    } catch (e) {
+      toast.error(heError(e, "קביעת המועד נכשלה"));
+    } finally {
+      setSending(false);
+
+    }
+  };
+
+  const sessionMsg = tab === "studio"
+    ? "היי מיכל, אשמח לתאם סשן צילומים בסטודיו 🌿"
+    : "היי מיכל, אשמח לתאם סשן צילומי חוץ בטבע 🌸";
+  const gmailLink =
+    `https://mail.google.com/mail/?view=cm&fs=1&to=${EMAIL}` +
+    `&su=${encodeURIComponent("תיאום סשן צילום")}&body=${encodeURIComponent(sessionMsg)}`;
+  const telLink = `tel:${PHONE}`;
+  const bookInputCls =
+    "w-full rounded-xl bg-white border border-[#33363d]/15 px-3.5 py-2.5 text-sm outline-none focus:border-[#ea7c1e] transition-colors";
+
+
+  return (
+    <div dir="rtl" className="min-h-screen bg-[#f4f3f0] text-[#33363d]" style={{ fontFamily: "'Fira Sans', sans-serif" }}>
+      <Header />
+
+      {/* Hero */}
+      <section className="max-w-6xl mx-auto px-6 pt-14 pb-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="relative text-center rounded-[2.5rem] px-6 md:px-16 py-14 md:py-20 border border-[#33363d]/10"
+          style={{ background: "var(--gradient-hero)" }}
+        >
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur px-5 py-2 rounded-full text-sm text-[#33363d] mb-7 border border-[#33363d]/10 shadow-sm">
+              <Camera size={14} /> צילום מקצועי · מיכל סיבוני
+            </div>
+            <h1 className="text-5xl md:text-7xl mb-5 leading-[1.15] text-[#33363d]" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              רגעים שנשארים.
+              <br />
+              <span className="text-[#ea7c1e]">בסטודיו או בטבע.</span>
+            </h1>
+            <p className="text-lg md:text-xl text-[#33363d]/90 max-w-2xl mx-auto mb-10 leading-relaxed">
+              סשנים אישיים עם הצלמת מיכל סיבוני – ניו-בורן, משפחה, ילדים ואירועים.
+              תבחרי את האווירה שמדברת אלייך: אור רך של סטודיו או קסם טבעי בטבע.
+            </p>
+            <div className="flex flex-wrap items-stretch justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => { setStep(1); setWizard(true); }}
+                className="inline-flex items-center gap-2 bg-[#33363d] text-white px-7 py-3.5 rounded-full hover:bg-[#33363d]/90 transition font-semibold"
+              >
+                <CalendarDays size={18} /> קביעת מועד ביומן
+              </button>
+              <a
+                href={gmailLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-white/90 backdrop-blur border border-[#33363d]/15 text-[#33363d] px-7 py-3.5 rounded-full hover:bg-white transition font-semibold"
+              >
+                <Mail size={18} /> לתאום סשן במייל
+              </a>
+              <a
+                href={MICHAL_SITE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-white/90 backdrop-blur border-2 border-[#e6e4e0]/50 text-[#33363d] px-7 py-3.5 rounded-full hover:bg-white hover:border-[#e6e4e0] transition font-semibold"
+              >
+                <ExternalLink size={18} /> לאתר של מיכל סיבוני
+              </a>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Tabs */}
+      <section className="max-w-6xl mx-auto px-6 pb-6">
+        <div className="flex justify-center">
+          <div className="inline-flex bg-white/70 backdrop-blur p-1.5 rounded-full border border-[#d6d7da]/30 shadow-sm">
+            {[
+              { id: "studio" as const, label: "צילומים בסטודיו", icon: Sun },
+              { id: "outdoor" as const, label: "צילומי חוץ בטבע", icon: Trees },
+            ].map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-full transition text-sm md:text-base ${
+                  tab === id
+                    ? "bg-[#33363d] text-white shadow"
+                    : "text-[#33363d] hover:bg-white/50"
+                }`}
+              >
+                <Icon size={16} /> {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Info cards per tab */}
+      <section className="max-w-6xl mx-auto px-6 pb-10">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.35 }}
+            className="grid md:grid-cols-3 gap-4"
+          >
+            {(tab === "studio"
+              ? [
+                  { icon: Clock, title: "300 ₪ / שעה", desc: "אפשרות לחצי שעה · בניית סטים +100 ₪" },
+                  { icon: Sparkles, title: "מעל 400 אביזרים", desc: "גישה מלאה לקטלוג הסטודיו לצילום" },
+                  { icon: Sun, title: "אור טבעי + תאורת סטודיו", desc: "חלל מעוצב, נעים ומקצועי" },
+                ]
+              : [
+                  { icon: Trees, title: "לוקיישן בהתאמה אישית", desc: "בטבע, בפארק, בחוף – איפה שמתאים לכם" },
+                  { icon: Sparkles, title: "אביזרים ניידים", desc: "אפשרות לשלב אביזרים מהסטודיו בצילומי חוץ" },
+                  { icon: Sun, title: "שעות זהב", desc: "צילום בזריחה או בשקיעה לתוצאה קסומה" },
+                ]
+            ).map(({ icon: Icon, title, desc }) => (
+              <div
+                key={title}
+                className="bg-white/80 backdrop-blur rounded-3xl p-6 border border-[#d6d7da]/25 shadow-sm hover:shadow-md transition"
+              >
+                <div className="w-11 h-11 rounded-full bg-[#e6e4e0] flex items-center justify-center mb-3 text-[#33363d]">
+                  <Icon size={20} />
+                </div>
+                <div className="text-xl mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>
+                  {title}
+                </div>
+                <div className="text-sm text-[#33363d]/80">{desc}</div>
+              </div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
+      </section>
+
+      {/* Newborn hand-off — newborn sessions have their own dedicated
+          packages/pricing/process, on a fully separate page with her own
+          photography branding (not the studio's), per explicit request:
+          this card deliberately looks like nothing else on this page — her
+          own logo, her own colors — so it reads as a handoff to another
+          site rather than just another option in this page's own flow. */}
+      <section className="max-w-4xl mx-auto px-6 pb-10">
+        <Link
+          to="/newborn"
+          className="group flex flex-col sm:flex-row items-center gap-6 rounded-3xl border border-[#d9b98a]/40 p-7 md:p-9 text-center sm:text-right transition hover:shadow-xl"
+          style={{ background: "linear-gradient(135deg, #fdf3ec 0%, #f3d3dd 55%, #ecd3ac 100%)" }}
+        >
+          <img src={michalLogoWordmark} alt="michal" className="h-14 w-auto shrink-0" />
+          <div className="flex-1">
+            <div className="inline-flex items-center gap-1.5 text-[#c23b6d] text-xs font-semibold mb-1.5">
+              <Heart size={12} className="fill-current" /> צילומי ניו-בורן
+            </div>
+            <h3 className="text-xl md:text-2xl text-[#4a3221] mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              מחפשת דווקא צילומי ניו-בורן?
+            </h3>
+            <p className="text-sm text-[#4a3221]/75">
+              לניו-בורן יש עמוד חבילות משלו — מחירים קבועים, תהליך מלא וגלריית תמונות אישית.
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-2 shrink-0 bg-[#4a3221] text-white px-6 py-3 rounded-full text-sm font-semibold group-hover:bg-[#4a3221]/90 transition">
+            למעבר לעמוד הניו-בורן <ArrowLeft size={16} />
+          </span>
+        </Link>
+      </section>
+
+      {/* Book a session into the studio calendar — pink CTA + step-by-step modal */}
+      <section id="book-michal" className="max-w-4xl mx-auto px-6 pb-14 scroll-mt-24">
+        <div className="bg-[#e6e4e0]/40 rounded-3xl border border-[#33363d]/10 p-6 md:p-8 text-center">
+          <div className="flex items-center justify-center gap-2 text-[#ea7c1e] text-xs tracking-[0.28em] uppercase mb-2">
+            <CalendarDays size={14} /> Booking
+          </div>
+          <h2 className="text-2xl md:text-3xl mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>
+            קביעת צילומים עם מיכל ביומן הסטודיו
+          </h2>
+          <p className="text-sm text-[#33363d]/85 mb-5 leading-relaxed">
+            בוחרים תאריך, שעה ומשך הסשן — המועד נשמר ביומן הסטודיו.{" "}
+            <strong>המועד מאושר סופית לאחר תיאום עם הצלמת.</strong> תעריף: {PHOTOGRAPHY_HOURLY_RATE} ₪ לשעה.
+          </p>
+          <button
+            type="button"
+            onClick={() => { setStep(1); setWizard(true); }}
+            className="inline-flex items-center gap-2 bg-[#33363d] text-white px-8 py-4 rounded-full text-base font-semibold hover:bg-[#33363d]/90 transition"
+          >
+            <CalendarDays size={18} /> קביעת מועד ביומן
+          </button>
+        </div>
+      </section>
+
+      {wizard && (
+        <div
+          dir="rtl"
+          className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setWizard(false)}
+        >
+          <div
+            className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-[#f4f3f0] rounded-3xl p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm font-semibold text-[#33363d]">שלב {step} מתוך 3</div>
+              <button type="button" aria-label="סגירה" onClick={() => setWizard(false)} className="h-9 w-9 rounded-full hover:bg-[#33363d]/10 flex items-center justify-center">
+                ✕
+              </button>
+            </div>
+            <div className="h-1.5 rounded-full bg-[#33363d]/10 mb-6 overflow-hidden">
+              <div className="h-full bg-[#33363d] transition-all" style={{ width: `${(step / 3) * 100}%` }} />
+            </div>
+
+            {step === 1 && (
+              <div className="grid sm:grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold text-[#33363d]/80">תאריך *</span>
+                  <input className={bookInputCls} type="date" value={book.date} onChange={(e) => setBook({ ...book, date: e.target.value })} />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold text-[#33363d]/80">שעת התחלה *</span>
+                  <input className={bookInputCls} type="time" step={1800} value={book.time} onChange={(e) => setBook({ ...book, time: e.target.value })} />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold text-[#33363d]/80">משך הסשן</span>
+                  <select className={bookInputCls} value={book.hours} onChange={(e) => setBook({ ...book, hours: e.target.value })}>
+                    {["0.5", "1", "1.5", "2", "3"].map((h) => (
+                      <option key={h} value={h}>
+                        {h} שעות · ₪{Math.round(PHOTOGRAPHY_HOURLY_RATE * Number(h))}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold text-[#33363d]/80">סוג צילום</span>
+                  <select className={bookInputCls} value={book.sessionType} onChange={(e) => setBook({ ...book, sessionType: e.target.value })}>
+                    {["משפחה", "הריון", "ילדים", "סמאש קייק", "אירוע", "אחר"].map((s) => (
+                      <option key={s}>{s}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="grid sm:grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold text-[#33363d]/80">שם מלא *</span>
+                  <input className={bookInputCls} value={book.name} onChange={(e) => setBook({ ...book, name: e.target.value })} />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold text-[#33363d]/80">טלפון *</span>
+                  <input className={bookInputCls} dir="ltr" type="tel" value={book.phone} onChange={(e) => setBook({ ...book, phone: e.target.value })} />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold text-[#33363d]/80">אימייל לאישור</span>
+                  <input className={bookInputCls} dir="ltr" type="email" list="email-suggest-studio-photography" value={book.email} onChange={(e) => setBook({ ...book, email: e.target.value })} placeholder="you@example.com" />
+                  <EmailDatalist id="email-suggest-studio-photography" value={book.email} />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold text-[#33363d]/80">אמצעי תשלום</span>
+                  <select className={bookInputCls} value={book.payment} onChange={(e) => setBook({ ...book, payment: e.target.value })}>
+                    {Object.entries(PAYMENT_LABELS).map(([k, v]) => (
+                      <option key={k} value={k}>{v}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1.5 sm:col-span-2">
+                  <span className="text-xs font-semibold text-[#33363d]/80">הערות</span>
+                  <textarea className={bookInputCls} rows={2} value={book.notes} onChange={(e) => setBook({ ...book, notes: e.target.value })} />
+                </label>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="rounded-2xl bg-white border border-[#d6d7da]/30 p-5 text-sm text-[#33363d] space-y-2">
+                <div className="font-semibold text-[#33363d] text-base mb-1">סיכום לפני שליחה</div>
+                <div>תאריך: <strong>{book.date || "—"}</strong> · שעה: <strong>{book.time || "—"}</strong></div>
+                <div>משך: <strong>{book.hours} שעות</strong> · סוג: <strong>{book.sessionType}</strong></div>
+                <div>שם: <strong>{book.name || "—"}</strong> · טלפון: <strong>{book.phone || "—"}</strong></div>
+                <div>עלות משוערת: <strong>₪{bookPrice}</strong> · תשלום ב{PAYMENT_LABELS[book.payment]}</div>
+                <p className="text-xs text-[#33363d]/80 pt-2">
+                  המועד יישמר ביומן הסטודיו ואישור יישלח למייל. המועד מאושר סופית לאחר תיאום עם הצלמת.
+                </p>
+              </div>
+            )}
+
+            <div className="mt-6 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => (step === 1 ? setWizard(false) : setStep(step - 1))}
+                className="h-12 px-6 rounded-full border border-[#33363d]/20 text-sm text-[#33363d] hover:bg-white"
+              >
+                {step === 1 ? "ביטול" : "חזרה"}
+              </button>
+              {step < 3 ? (
+                <button
+                  type="button"
+                  onClick={() => setStep(step + 1)}
+                  className="h-12 px-8 rounded-full bg-[#33363d] text-white text-sm font-semibold hover:bg-[#33363d]/90"
+                >
+                  המשך
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={submitBooking}
+                  disabled={sending}
+                  className="inline-flex items-center gap-2 h-12 px-8 rounded-full bg-[#33363d] text-white text-sm font-semibold hover:bg-[#33363d]/90 disabled:opacity-50"
+                >
+                  <CalendarDays size={18} /> {sending ? "שולח…" : "שליחה וקביעה ביומן"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Gallery */}
+      <section className="max-w-6xl mx-auto px-6 pb-16">
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <h2 className="text-3xl md:text-4xl" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              {tab === "studio" ? "מהסטודיו" : "מהטבע"}
+            </h2>
+            <p className="text-sm text-[#33363d]/70 mt-1">
+              תמונות נבחרות מתוך התיק של מיכל סיבוני
+            </p>
+          </div>
+          <a
+            href={MICHAL_SITE}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:inline-flex items-center gap-1 text-sm text-[#ea7c1e] hover:text-[#33363d]"
+          >
+            כל הגלריה <ArrowLeft size={14} />
+          </a>
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4"
+          >
+            {photos.map((src, i) => (
+              <motion.button
+                key={src}
+                onClick={() => setLightbox(src)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                whileHover={{ scale: 1.02 }}
+                className={`relative overflow-hidden rounded-2xl bg-[#e6e4e0] group ${
+                  i % 5 === 0 ? "md:col-span-2 md:row-span-2 aspect-square" : "aspect-square"
+                }`}
+              >
+                <img
+                  src={src}
+                  alt={`${tab === "studio" ? "צילום בסטודיו" : "צילומי חוץ"} ${i + 1}`}
+                  loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition" />
+              </motion.button>
+            ))}
+          </motion.div>
+        </AnimatePresence>
+      </section>
+
+      {/* CTA */}
+      <section className="max-w-4xl mx-auto px-6 pb-20">
+        <div className="bg-white text-[#33363d] rounded-3xl border border-[#33363d]/10 p-10 md:p-14 text-center">
+          <div>
+            <h3 className="text-3xl md:text-4xl mb-3" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              מוכנים לרגע שלכם?
+            </h3>
+            <p className="text-[#33363d]/75 mb-7 max-w-xl mx-auto">
+              נשמח לתאם איתכם סשן צילום שיתאים בדיוק לסיפור שלכם – בסטודיו או בחוץ.
+            </p>
+            <div className="flex flex-wrap gap-3 justify-center">
+              <a
+                href={telLink}
+                className="inline-flex items-center gap-2 bg-[#33363d] text-white px-7 py-3.5 rounded-full hover:bg-[#33363d]/90 transition"
+              >
+                <Phone size={18} /> חיוג 054-8529277
+              </a>
+              <a
+                href={gmailLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 border border-[#33363d]/15 text-[#33363d] px-7 py-3.5 rounded-full hover:bg-[#f4f3f0] transition"
+              >
+                <Mail size={18} /> מייל
+              </a>
+              <a
+                href={MICHAL_SITE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 border border-[#33363d]/15 text-[#33363d] px-7 py-3.5 rounded-full hover:bg-[#f4f3f0] transition"
+              >
+                <ExternalLink size={18} /> האתר של מיכל
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 cursor-zoom-out"
+            onClick={() => setLightbox(null)}
+          >
+            <motion.img
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              src={lightbox}
+              alt=""
+              className="max-w-full max-h-full rounded-2xl shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

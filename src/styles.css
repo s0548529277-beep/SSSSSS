@@ -1,0 +1,247 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+/* Tel Aviv Brutalist — her own purchased font, self-hosted (files in
+   public/fonts). Registered directly UNDER THE NAME "DM Serif Display"
+   (not a new family name) — deliberately, so every existing and future
+   place in the codebase that hardcodes fontFamily: "'DM Serif Display',
+   serif" (there are dozens, scattered across page components, and this
+   repo is also being actively edited in parallel via the Lovable platform
+   UI, which regenerates files and doesn't know about a custom var/class
+   convention) picks up the new font automatically with zero per-usage
+   changes, and stays correct even as more such usages get added. The
+   matching Google-Fonts "DM+Serif+Display" family was removed from the
+   stylesheet link in __root.tsx so there's no competing declaration for
+   this name — this local one is the only source for it now. */
+@font-face {
+  font-family: "DM Serif Display";
+  src: url("/fonts/TelAviv-BrutalistLight.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DM Serif Display";
+  src: url("/fonts/TelAviv-BrutalistRegular.woff2") format("woff2");
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DM Serif Display";
+  src: url("/fonts/TelAviv-BrutalistBold.woff2") format("woff2");
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+  --radius-2xl: calc(var(--radius) + 12px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-cream: var(--cream);
+  --color-bone: var(--bone);
+  --color-sand: var(--sand);
+  --color-sand-deep: var(--sand-deep);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-newborn-canvas: var(--newborn-canvas);
+  --color-newborn-blush: var(--newborn-blush);
+  --color-newborn-rose: var(--newborn-rose);
+  --color-newborn-gold: var(--newborn-gold);
+  --color-newborn-ink: var(--newborn-ink);
+  /* legacy alias tokens retained so existing pages keep rendering */
+  --color-blush: var(--bone);
+  --color-blush-deep: var(--sand);
+  --color-peach: var(--sand);
+  --color-peach-deep: var(--sand-deep);
+  --color-forest: var(--ink);
+  --color-forest-soft: var(--ink-soft);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+}
+
+:root {
+  --radius: 0.5rem;
+
+  /* Sport Plus — Cream · Gray · Orange */
+  --cream: #f4f3f0;
+  --bone: #e6e4e0;         /* soft gray */
+  --sand: #d6d7da;         /* light gray */
+  --sand-deep: #ea7c1e;    /* orange accent */
+  --ink: #33363d;          /* charcoal */
+  --ink-soft: #52555c;
+
+  --background: #f4f3f0;
+  --foreground: #33363d;
+  --card: #ffffff;
+  --card-foreground: #33363d;
+  --popover: #ffffff;
+  --popover-foreground: #33363d;
+  --primary: #33363d;
+  --primary-foreground: #f4f3f0;
+  --secondary: #e6e4e0;
+  --secondary-foreground: #33363d;
+  --muted: #efe2d5;
+  --muted-foreground: #6b6b6b;
+  --accent: #d6d7da;
+  --accent-foreground: #33363d;
+  --destructive: oklch(0.55 0.19 25);
+  --destructive-foreground: #ffffff;
+  /* A hairline, barely-there dark-green line rather than the old solid tan
+     border — per direct request: pink-cream surfaces, green used only as a
+     near-invisible outline, never a filled block. */
+  --border: color-mix(in oklab, var(--ink) 12%, transparent);
+  --input: color-mix(in oklab, var(--ink) 14%, transparent);
+  --ring: #33363d;
+
+  --font-display: "DM Serif Display", "Cormorant Garamond", ui-serif, Georgia, serif;
+  --font-body: "Fira Sans", "Assistant", ui-sans-serif, system-ui, sans-serif;
+
+  /* Michal newborn boutique — selected rose-gold direction */
+  --newborn-canvas: oklch(0.982 0.008 30);
+  --newborn-blush: oklch(0.925 0.035 350);
+  --newborn-rose: oklch(0.62 0.17 8);
+  --newborn-gold: oklch(0.63 0.08 70);
+  --newborn-ink: oklch(0.31 0.025 45);
+
+  /* Softened — the old values read as heavy "designed" shadows; flatter
+     hairline-bordered cards fit the clean/quiet direction better. */
+  --shadow-soft: 0 24px 48px -32px rgb(45 61 43 / 0.10);
+  --shadow-card: 0 8px 24px -16px rgb(45 61 43 / 0.06);
+  --gradient-hero: linear-gradient(135deg, #f4f3f0 0%, #e6e4e0 100%);
+}
+
+.dark {
+  --background: #1a1a1a;
+  --foreground: #faf8f5;
+  --card: #242322;
+  --card-foreground: #faf8f5;
+  --popover: #242322;
+  --popover-foreground: #faf8f5;
+  --primary: #faf8f5;
+  --primary-foreground: #1a1a1a;
+  --secondary: #2e2c29;
+  --secondary-foreground: #faf8f5;
+  --muted: #2a2826;
+  --muted-foreground: #a8a29a;
+  --accent: #c9b99a;
+  --accent-foreground: #1a1a1a;
+  --border: rgb(255 255 255 / 10%);
+  --input: rgb(255 255 255 / 12%);
+  --ring: #c9b99a;
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html { direction: rtl; }
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+  ::selection { background: var(--color-ink); color: var(--color-cream); }
+  /* Lovable injects a "Made with Lovable" badge into published pages via an
+     element with this id — it's not part of our own markup, so it can't be
+     removed from a component. Hiding it here is the free equivalent of the
+     paid "Hide Lovable badge" toggle in Project settings → Publishing. */
+  #lovable-badge { display: none !important; }
+}
+
+@utility container-page {
+  width: 100%;
+  max-width: 1320px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+@utility input-field {
+  width: 100%;
+  height: 2.75rem;
+  padding-inline: 0.9rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, white 85%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-primary) 15%, transparent);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+
+@utility glass-card {
+  background: color-mix(in oklab, white 82%, var(--color-bone) 18%);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+}
+
+@utility film-strip {
+  background-image:
+    radial-gradient(circle, var(--color-cream) 3px, transparent 3.5px),
+    radial-gradient(circle, var(--color-cream) 3px, transparent 3.5px);
+  background-size: 22px 100%, 22px 100%;
+  background-position: 0 6px, 0 calc(100% - 6px);
+  background-repeat: repeat-x;
+}
+
+@utility eyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+@utility grain {
+  position: relative;
+}
+@utility grain-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+@keyframes marquee-rtl {
+  from { transform: translateX(0); }
+  to { transform: translateX(50%); }
+}
+@utility marquee-track {
+  display: inline-flex;
+  gap: 3rem;
+  animation: marquee-rtl 40s linear infinite;
+  white-space: nowrap;
+}
