@@ -32,14 +32,14 @@ export const Route = createFileRoute("/about")({
           name: "Sport Plus",
           image: "https://sportplus.co.il/favicon.ico",
           url: "https://sportplus.co.il",
-          telephone: "+972-54-8529277",
+          telephone: "+972-58-3258197",
           email: "s0548529277@gmail.com",
           priceRange: "₪₪",
           description:
             "סטודיו לצילום להשכרה לפי שעות והשכרת אביזרי צילום לפי שעות בבית שמש — ניוברן, גיל שנה, חלאקה ומשפחה.",
           address: {
             "@type": "PostalAddress",
-            streetAddress: "תלמוד ירושלמי 24",
+            streetAddress: "לקיש 8, קומה -1",
             addressLocality: "בית שמש",
             addressCountry: "IL",
           },
@@ -73,9 +73,9 @@ function About() {
   const aboutGallery = usePageGallery(PAGE_IMAGE_KEYS.about);
 
   const contactCards = [
-    { icon: Phone, t: "טלפון", v: "054-8529277", href: "tel:0548529277", ltr: true },
+    { icon: Phone, t: "טלפון", v: "058-3258197", href: "tel:0583258197", ltr: true },
     { icon: Mail, t: "אימייל", v: "s0548529277@gmail.com", href: "mailto:s0548529277@gmail.com", ltr: true },
-    { icon: MapPin, t: "כתובת", v: "תלמוד ירושלמי 24, בית שמש", href: "https://maps.google.com/?q=תלמוד+ירושלמי+24+בית+שמש", ltr: false },
+    { icon: MapPin, t: "כתובת", v: "לקיש 8, קומה -1, בית שמש", href: "https://maps.google.com/?q=תלמוד+ירושלמי+24+בית+שמש", ltr: false },
   ];
 
   return (

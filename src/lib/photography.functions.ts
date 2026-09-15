@@ -122,7 +122,7 @@ export const requestPhotographySession = createServerFn({ method: "POST" })
           ${row("טלפון", data.contact_phone)}
           ${data.notes ? row("הערות", String(data.notes).replace(/</g, "&lt;")) : ""}
         </table>
-        <p style="color:#ea7c1e;font-size:13px;margin-top:16px">Sport Plus · תלמוד ירושלמי 24, בית שמש · 054-8529277</p>
+        <p style="color:#ea7c1e;font-size:13px;margin-top:16px">Sport Plus · לקיש 8, קומה -1, בית שמש · 058-3258197</p>
       </div>`;
       const { sendStudioAndCustomer } = await import("@/integrations/google/gmail.server");
       await sendStudioAndCustomer({
@@ -186,7 +186,7 @@ export const finalizePhotographySession = createServerFn({ method: "POST" })
           .join("\n"),
         startISO: `${booking.session_date}T${String(booking.start_time).slice(0, 5)}:00`,
         endISO: `${booking.session_date}T${String(booking.end_time).slice(0, 5)}:00`,
-        location: "תלמוד ירושלמי 24, בית שמש",
+        location: "לקיש 8, קומה -1, בית שמש",
         attendees: calendarEmail ? [calendarEmail] : [],
       });
       if (event) {
@@ -208,7 +208,7 @@ export const finalizePhotographySession = createServerFn({ method: "POST" })
         <p><strong>יש להקפיד על הזמנים.</strong></p>
         <p>אמצעי תשלום: ${PAYMENT_LABELS[data.payment_method] ?? data.payment_method}</p>
         <pre style="font-family:Arial,sans-serif;white-space:pre-wrap;background:#faf7f4;padding:12px;border-radius:8px">${ARRIVAL_TEXT_HE}</pre>
-        <p style="color:#ea7c1e;font-size:13px">Sport Plus · תלמוד ירושלמי 24, בית שמש · 054-8529277</p>
+        <p style="color:#ea7c1e;font-size:13px">Sport Plus · לקיש 8, קומה -1, בית שמש · 058-3258197</p>
       </div>`;
       const { sendStudioAndCustomer } = await import("@/integrations/google/gmail.server");
       await sendStudioAndCustomer({

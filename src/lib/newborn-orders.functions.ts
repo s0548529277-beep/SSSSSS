@@ -178,7 +178,7 @@ async function syncNewbornCalendarEvent(
       description: order.contact_email ? `מייל: ${order.contact_email}` : undefined,
       startISO: `${order.session_date}T${time}:00`,
       endISO: `${order.session_date}T${endTime}:00`,
-      location: "תלמוד ירושלמי 24, בית שמש",
+      location: "לקיש 8, קומה -1, בית שמש",
       attendees: order.contact_email ? [order.contact_email] : [],
     });
     if (!event) return "יצירת האירוע ביומן החזירה תוצאה ריקה";

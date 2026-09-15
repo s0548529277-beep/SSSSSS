@@ -196,7 +196,7 @@ function Deposit() {
                   </p>
                 )}
                 {!isStudio && (
-                  <p className="text-sm text-primary/80 mb-2">נא לתאם טלפונית איסוף אביזרים בשעה הרצויה · <span dir="ltr">054-8529277</span></p>
+                  <p className="text-sm text-primary/80 mb-2">נא לתאם טלפונית איסוף אביזרים בשעה הרצויה · <span dir="ltr">058-3258197</span></p>
                 )}
                 <p className="text-muted-foreground mb-6">
                   {method === "cash"
@@ -213,7 +213,7 @@ function Deposit() {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       תקף רק בשעות ההשכרה שלך. אחרי הקשת הקוד יש ללחוץ על # לאישור. הקוד נשלח גם למייל.
-                      {!isStudio && " הקוד לא פעיל בין 00:00 ל-07:00. אין לקחת או להחזיר אביזרים בלי לתאם טלפונית מראש · 054-8529277."}
+                      {!isStudio && " הקוד לא פעיל בין 00:00 ל-07:00. אין לקחת או להחזיר אביזרים בלי לתאם טלפונית מראש · 058-3258197."}
                     </p>
                   </div>
                 )}

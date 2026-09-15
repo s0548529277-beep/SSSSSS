@@ -788,7 +788,7 @@ async function finalizeBookingConfirmation(
       .join("\n"),
     startISO: `${b.session_date}T${String(b.start_time).slice(0, 5)}:00`,
     endISO: `${b.session_date}T${String(b.end_time).slice(0, 5)}:00`,
-    location: "תלמוד ירושלמי 24, בית שמש",
+    location: "לקיש 8, קומה -1, בית שמש",
     attendees: customerEmail ? [customerEmail] : [],
   });
   if (event) {
@@ -1040,7 +1040,7 @@ export const adminConfirmPhoneBookingDeposit = createServerFn({ method: "POST" }
 // transfer it in a few minutes" isn't a false alarm, short enough that a
 // booking doesn't sit forgotten for a whole day.
 const PHONE_CONFIRM_REMINDER_AFTER_MINUTES = 120;
-const STUDIO_OWNER_PHONE = "0548529277";
+const STUDIO_OWNER_PHONE = "0583258197";
 
 /**
  * A phone booking only ever reaches "confirmed" (door code + full email +

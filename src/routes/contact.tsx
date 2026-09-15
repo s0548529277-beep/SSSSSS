@@ -25,12 +25,12 @@ export const Route = createFileRoute("/contact")({
           name: "Sport Plus",
           image: "https://sportplus.co.il/favicon.ico",
           url: "https://sportplus.co.il",
-          telephone: "+972-54-8529277",
+          telephone: "+972-58-3258197",
           email: "s0548529277@gmail.com",
           priceRange: "₪₪",
           address: {
             "@type": "PostalAddress",
-            streetAddress: "תלמוד ירושלמי 24",
+            streetAddress: "לקיש 8, קומה -1",
             addressLocality: "בית שמש",
             addressCountry: "IL",
           },
@@ -43,9 +43,9 @@ export const Route = createFileRoute("/contact")({
 
 function Contact() {
   const cards = [
-    { icon: Phone, t: "טלפון", v: "054-8529277", href: "tel:0548529277" },
+    { icon: Phone, t: "טלפון", v: "058-3258197", href: "tel:0583258197" },
     { icon: Mail, t: "אימייל", v: "s0548529277@gmail.com", href: "mailto:s0548529277@gmail.com" },
-    { icon: MapPin, t: "כתובת", v: "תלמוד ירושלמי 24, בית שמש", href: "https://maps.google.com/?q=תלמוד+ירושלמי+24+בית+שמש" },
+    { icon: MapPin, t: "כתובת", v: "לקיש 8, קומה -1, בית שמש", href: "https://maps.google.com/?q=תלמוד+ירושלמי+24+בית+שמש" },
   ];
   return (
     <div className="min-h-screen flex flex-col bg-background">

@@ -284,7 +284,7 @@ function Cart() {
               <div><Label>11. יש לך הצעה לשיפור? (לא חובה)</Label><Textarea rows={3} value={form.suggestion} onChange={(e) => setForm({ ...form, suggestion: e.target.value })} className="mt-1" /></div>
 
               <div className="text-[11px] text-forest/60 text-center pt-2">
-                10. לכל שאלה: 054-8529277 · s0548529277@gmail.com
+                10. לכל שאלה: 058-3258197 · s0548529277@gmail.com
               </div>
             </div>
 

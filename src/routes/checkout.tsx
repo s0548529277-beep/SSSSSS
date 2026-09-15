@@ -279,7 +279,7 @@ function Checkout() {
             <div className="glass-card rounded-3xl p-8">
               <h2 className="font-display text-xl text-primary mb-1">תנאי השכרה</h2>
               <p className="text-xs text-muted-foreground mb-4">
-                מיקום הסטודיו: <span className="font-medium text-primary">תלמוד ירושלמי 24, בית שמש</span>
+                מיקום הסטודיו: <span className="font-medium text-primary">לקיש 8, קומה -1, בית שמש</span>
               </p>
               <ul className="text-xs text-muted-foreground space-y-1.5 mb-4 max-h-32 overflow-y-auto pr-2">
                 <li>· חפץ שלא ייאסף תוך 30 יום ייכנס למאגר האביזרים.</li>

@@ -149,7 +149,7 @@ export function doorCodeFromPhone(phone: string): string {
  * 6-9 digit passcode (the 9-digit code above is what's actually sent and
  * registered), but the physical keypad apparently matches on the
  * zero-padded 10-digit form once the code syncs down to the lock — a real
- * customer's door opened with "0548529277" and did NOT open with
+ * customer's door opened with "0583258197" and did NOT open with
  * "548529277" alone (confirmed from the lock's own access log). So the API
  * call keeps using the 9-digit form; only what a human sees/hears is padded.
  */

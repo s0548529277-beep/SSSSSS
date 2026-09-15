@@ -13,18 +13,9 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const nav: { to: string; label: string; hash?: string; soon?: boolean }[] = [
   { to: "/", label: "בית" },
-  { to: "/newborn", label: "צילומי ניו-בורן" },
-  { to: "/studio-photography", label: "צילומים בסטודיו" },
-  { to: "/studio-rental", label: "השכרת סטודיו" },
-  { to: "/rental-catalog", label: "קטלוג אביזרים להשכרה" },
-  // Points straight at the full Studio gallery (/collage-studio), not the
-  // older, simpler /collage-maker — per explicit follow-up request: the
-  // powerful editor (free drag, multiple photos, stickers, backgrounds)
-  // should be the direct destination, not something reached through an
-  // extra "want more control?" detour. /collage-maker still exists and
-  // still works on its own URL, just isn't the promoted entry point
-  // anymore.
-  { to: "/collage-studio", label: "עיצוב קולאז׳ חינם" },
+  { to: "/studio-rental", label: "השכרת חלל ספורט" },
+  { to: "/office-rental", label: "השכרת משרד" },
+  { to: "/girls-class", label: "חוג התעמלות לילדות" },
   { to: "/about", label: "אודות ויצירת קשר" },
 ];
 
@@ -40,7 +31,7 @@ function scrollToHash(hash?: string) {
   };
 }
 
-const BETA_BANNER_KEY = "sweetbaby-beta-banner-dismissed";
+const BETA_BANNER_KEY = "sportplus-beta-banner-dismissed";
 
 
 export function Header() {
@@ -156,9 +147,6 @@ export function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.navigate({ to: "/account" })}>
                   הכרטיסייה שלי
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.navigate({ to: "/my-photos" })}>
-                  התמונות שלי
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.navigate({ to: "/cart" })}>
                   העגלה שלי

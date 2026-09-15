@@ -15,8 +15,8 @@ export function Footer() {
           </div>
           <div className="md:col-span-3 text-sm space-y-2">
             <h4 className="text-[10px] tracking-[0.35em] uppercase text-sand mb-4">Contact</h4>
-            <p className="text-background/85">תלמוד ירושלמי 24, בית שמש</p>
-            <p dir="ltr" className="text-start text-background/85">054-8529277</p>
+            <p className="text-background/85">לקיש 8, קומה -1, בית שמש</p>
+            <p dir="ltr" className="text-start text-background/85">058-3258197</p>
             <p dir="ltr" className="text-start text-background/85">s0548529277@gmail.com</p>
           </div>
           <div className="md:col-span-4 text-sm space-y-2">

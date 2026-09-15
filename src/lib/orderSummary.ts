@@ -34,7 +34,7 @@ export function buildDoorCodeHtml(code: string, extraNote?: string): string {
 }
 
 /** The extra caveat shown only on props/accessories orders — the code doesn't just cover a fixed window, it goes dead overnight. */
-const PROPS_DOOR_CODE_NOTE = "הקוד לא פעיל בין 00:00 ל-07:00. אין לקחת או להחזיר אביזרים בלי לתאם טלפונית מראש · 054-8529277.";
+const PROPS_DOOR_CODE_NOTE = "הקוד לא פעיל בין 00:00 ל-07:00. אין לקחת או להחזיר אביזרים בלי לתאם טלפונית מראש · 058-3258197.";
 
 /**
  * Maps the raw studio-intake questionnaire payload (studio_intake_forms.payload)
@@ -86,7 +86,7 @@ export function buildArrivalHtml(): string {
     <div style="background:#faf7f4;border-radius:8px;padding:12px 16px;white-space:pre-line;line-height:1.6">${escapeHtml(
       ARRIVAL_TEXT_HE,
     )}</div>
-    <p style="color:#ea7c1e;font-size:13px;margin-top:8px">נא לתאם טלפונית לפני ההגעה · 054-8529277</p>`;
+    <p style="color:#ea7c1e;font-size:13px;margin-top:8px">נא לתאם טלפונית לפני ההגעה · 058-3258197</p>`;
 }
 
 // ---------- Studio-booking summary ----------
@@ -159,7 +159,7 @@ export function buildBookingSummaryHtml(opts: {
     ${includeIntake ? buildIntakeHtml(intakePayload) : ""}
     ${includeArrival ? buildArrivalHtml() : ""}
     ${footerNote ? `<p style="color:#ea7c1e;font-size:13px;margin-top:16px">${footerNote}</p>` : ""}
-    <p style="color:#ea7c1e;font-size:13px;margin-top:16px">כתובת הסטודיו: תלמוד ירושלמי 24, בית שמש · לשאלות: s0548529277@gmail.com / 054-8529277</p>
+    <p style="color:#ea7c1e;font-size:13px;margin-top:16px">כתובת הסטודיו: לקיש 8, קומה -1, בית שמש · לשאלות: s0548529277@gmail.com / 058-3258197</p>
   </div>`;
 }
 
@@ -229,6 +229,6 @@ export function buildPropsOrderSummaryHtml(opts: {
     ${doorCodeHtml}
     ${includeArrival ? buildArrivalHtml() : ""}
     ${footerNote ? `<p style="color:#ea7c1e;font-size:13px;margin-top:16px">${footerNote}</p>` : ""}
-    <p style="color:#ea7c1e;font-size:13px;margin-top:16px">כתובת הסטודיו: תלמוד ירושלמי 24, בית שמש · לשאלות: s0548529277@gmail.com / 054-8529277</p>
+    <p style="color:#ea7c1e;font-size:13px;margin-top:16px">כתובת הסטודיו: לקיש 8, קומה -1, בית שמש · לשאלות: s0548529277@gmail.com / 058-3258197</p>
   </div>`;
 }

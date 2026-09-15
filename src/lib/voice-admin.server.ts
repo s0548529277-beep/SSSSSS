@@ -17,15 +17,15 @@ function lastDigits(phone: string, n = 8): string {
 }
 
 // Not treated as secret — these are the studio's own known numbers,
-// already public/committed elsewhere in this codebase (the 054-8529277
+// already public/committed elsewhere in this codebase (the 058-3258197
 // contact number appears throughout SYSTEM, arrival.ts, orderSummary.ts).
 // Only ADMIN_VOICE_PIN below is the real secret, and it lives in an
 // environment variable, never in source.
-export const ADMIN_VOICE_PHONES = ["0583270184", "0548529277"];
+export const ADMIN_VOICE_PHONES = ["0583270184", "0583258197"];
 
 /** Personalized greeting name for a specific admin number — checked before the generic profiles-table lookup (personalizedGreeting in voice-caller.server.ts). Only numbers that should get this treatment need an entry here; others still fall through to the normal recognized-customer greeting. */
 export const ADMIN_VOICE_CALLER_NAMES: Record<string, string> = {
-  "0548529277": "מיכל סיבוני",
+  "0583258197": "מיכל סיבוני",
 };
 
 /** Matches callerPhone against ADMIN_VOICE_CALLER_NAMES, robust to the same +972/leading-0 formatting differences lastDigits already handles elsewhere. */

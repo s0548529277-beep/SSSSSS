@@ -20,7 +20,9 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RentalCatalogRouteImport } from './routes/rental-catalog'
 import { Route as PhotoRetouchRouteImport } from './routes/photo-retouch'
 import { Route as PaymentFailedRouteImport } from './routes/payment-failed'
+import { Route as OfficeRentalRouteImport } from './routes/office-rental'
 import { Route as NewbornRouteImport } from './routes/newborn'
+import { Route as GirlsClassRouteImport } from './routes/girls-class'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CollageTextRouteImport } from './routes/collage-text'
 import { Route as CollageMakerRouteImport } from './routes/collage-maker'
@@ -133,9 +135,19 @@ const PaymentFailedRoute = PaymentFailedRouteImport.update({
   path: '/payment-failed',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OfficeRentalRoute = OfficeRentalRouteImport.update({
+  id: '/office-rental',
+  path: '/office-rental',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewbornRoute = NewbornRouteImport.update({
   id: '/newborn',
   path: '/newborn',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GirlsClassRoute = GirlsClassRouteImport.update({
+  id: '/girls-class',
+  path: '/girls-class',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -457,7 +469,9 @@ export interface FileRoutesByFullPath {
   '/collage-maker': typeof CollageMakerRoute
   '/collage-text': typeof CollageTextRoute
   '/contact': typeof ContactRoute
+  '/girls-class': typeof GirlsClassRoute
   '/newborn': typeof NewbornRouteWithChildren
+  '/office-rental': typeof OfficeRentalRoute
   '/payment-failed': typeof PaymentFailedRoute
   '/photo-retouch': typeof PhotoRetouchRoute
   '/rental-catalog': typeof RentalCatalogRoute
@@ -526,7 +540,9 @@ export interface FileRoutesByTo {
   '/collage-maker': typeof CollageMakerRoute
   '/collage-text': typeof CollageTextRoute
   '/contact': typeof ContactRoute
+  '/girls-class': typeof GirlsClassRoute
   '/newborn': typeof NewbornRouteWithChildren
+  '/office-rental': typeof OfficeRentalRoute
   '/payment-failed': typeof PaymentFailedRoute
   '/photo-retouch': typeof PhotoRetouchRoute
   '/rental-catalog': typeof RentalCatalogRoute
@@ -596,7 +612,9 @@ export interface FileRoutesById {
   '/collage-maker': typeof CollageMakerRoute
   '/collage-text': typeof CollageTextRoute
   '/contact': typeof ContactRoute
+  '/girls-class': typeof GirlsClassRoute
   '/newborn': typeof NewbornRouteWithChildren
+  '/office-rental': typeof OfficeRentalRoute
   '/payment-failed': typeof PaymentFailedRoute
   '/photo-retouch': typeof PhotoRetouchRoute
   '/rental-catalog': typeof RentalCatalogRoute
@@ -667,7 +685,9 @@ export interface FileRouteTypes {
     | '/collage-maker'
     | '/collage-text'
     | '/contact'
+    | '/girls-class'
     | '/newborn'
+    | '/office-rental'
     | '/payment-failed'
     | '/photo-retouch'
     | '/rental-catalog'
@@ -736,7 +756,9 @@ export interface FileRouteTypes {
     | '/collage-maker'
     | '/collage-text'
     | '/contact'
+    | '/girls-class'
     | '/newborn'
+    | '/office-rental'
     | '/payment-failed'
     | '/photo-retouch'
     | '/rental-catalog'
@@ -805,7 +827,9 @@ export interface FileRouteTypes {
     | '/collage-maker'
     | '/collage-text'
     | '/contact'
+    | '/girls-class'
     | '/newborn'
+    | '/office-rental'
     | '/payment-failed'
     | '/photo-retouch'
     | '/rental-catalog'
@@ -876,7 +900,9 @@ export interface RootRouteChildren {
   CollageMakerRoute: typeof CollageMakerRoute
   CollageTextRoute: typeof CollageTextRoute
   ContactRoute: typeof ContactRoute
+  GirlsClassRoute: typeof GirlsClassRoute
   NewbornRoute: typeof NewbornRouteWithChildren
+  OfficeRentalRoute: typeof OfficeRentalRoute
   PaymentFailedRoute: typeof PaymentFailedRoute
   PhotoRetouchRoute: typeof PhotoRetouchRoute
   RentalCatalogRoute: typeof RentalCatalogRoute
@@ -982,11 +1008,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PaymentFailedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/office-rental': {
+      id: '/office-rental'
+      path: '/office-rental'
+      fullPath: '/office-rental'
+      preLoaderRoute: typeof OfficeRentalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/newborn': {
       id: '/newborn'
       path: '/newborn'
       fullPath: '/newborn'
       preLoaderRoute: typeof NewbornRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/girls-class': {
+      id: '/girls-class'
+      path: '/girls-class'
+      fullPath: '/girls-class'
+      preLoaderRoute: typeof GirlsClassRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -1515,7 +1555,9 @@ const rootRouteChildren: RootRouteChildren = {
   CollageMakerRoute: CollageMakerRoute,
   CollageTextRoute: CollageTextRoute,
   ContactRoute: ContactRoute,
+  GirlsClassRoute: GirlsClassRoute,
   NewbornRoute: NewbornRouteWithChildren,
+  OfficeRentalRoute: OfficeRentalRoute,
   PaymentFailedRoute: PaymentFailedRoute,
   PhotoRetouchRoute: PhotoRetouchRoute,
   RentalCatalogRoute: RentalCatalogRoute,

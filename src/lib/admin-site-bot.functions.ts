@@ -21,7 +21,7 @@ async function assertAdmin(supabase: any, userId: string) {
 }
 
 const REPO_OWNER = "s0548529277-beep";
-const REPO_NAME = "sweetbabyphotographystudio";
+const REPO_NAME = "ssssss";
 const REPO = `${REPO_OWNER}/${REPO_NAME}`;
 
 function githubHeaders() {

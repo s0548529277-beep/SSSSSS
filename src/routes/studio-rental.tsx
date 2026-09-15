@@ -1,9 +1,9 @@
 import { heError } from "@/lib/he-errors";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Clock, CreditCard, CalendarDays, Sparkles, ArrowLeft, X, MapPin, Star, AlertTriangle, PlayCircle } from "lucide-react";import { Header } from "@/components/Header";
-import { StudioGuideModal } from "@/components/StudioGuideModal";
+import { Clock, CreditCard, CalendarDays, Sparkles, ArrowLeft, X, MapPin, Star, AlertTriangle } from "lucide-react";
+import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/lib/auth";
 import { useProfilePrefill } from "@/hooks/use-profile";
@@ -12,18 +12,16 @@ import { EmailDatalist } from "@/components/EmailDatalist";
 import { submitStudioIntake } from "@/lib/studio-intake.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { InspirationStrip } from "@/components/InspirationStrip";
-import { usePageGallery, PAGE_IMAGE_KEYS } from "@/lib/page-images";
 import { ArrivalDirections } from "@/components/ArrivalDirections";
 
 
 export const Route = createFileRoute("/studio-rental")({
   head: () => ({
     meta: [
-      { title: "השכרת סטודיו | Sport Plus" },
-      { name: "description", content: "השכרת סטודיו בוטיק בבית שמש לצילומי ניו-בורן, סמאש קיק , חלאקה , משפחה . מחירון שקוף וקביעת תור אונליין." },
-      { property: "og:title", content: "השכרת סטודיו | Sport Plus" },
-      { property: "og:description", content: "חלל בוטיק מאובזר, תאורה מקצועית ואווירה שקטה — לצלמות שמחפשות סטודיו איכותי בבית שמש." },
+      { title: "השכרת חלל ספורט | Sport Plus" },
+      { name: "description", content: "השכרת חלל ספורט בבית שמש — לאימונים אישיים, חוגים ואירועים. מחירון שקוף וקביעת תור אונליין." },
+      { property: "og:title", content: "השכרת חלל ספורט | Sport Plus" },
+      { property: "og:description", content: "חלל מאובזר, אווירה נעימה — 70 ₪ לשעה." },
       { property: "og:url", content: "https://sportplus.co.il/studio-rental" },
     ],
     links: [{ rel: "canonical", href: "https://sportplus.co.il/studio-rental" }],
@@ -46,86 +44,46 @@ const emptyForm: IntakeForm = {
   needProps: "", specialRequests: "", guidance: "basic", agreed: false,
 };
 
-const guidanceOptions = [
-  { key: "basic", price: 0, tag: "בסיסי", title: "הדרכה קצרה (חינם)", desc: "הדרכה באתר + בסטודיו עד 5 דקות, בכפוף לזמינות או בטלפון." },
-  { key: "mini", price: 50, tag: "MINI", title: "הדרכה ביסיק מומלצת למתחילות    ", desc: "עד 20 דק׳ בסטודיו פנים אל פנים: הפעלת ציוד, הגדרות מצלמה בסיסיות והתאמת סט אחד." },
-  { key: "plus", price: 100, tag: "PLUS", title: "הדרכה כוללת + הכנת סטים ", desc: "התאמת 2 סטים לצילום כולל כוונה יצירתית והדרכה טכנית.", featured: true },
-  { key: "premium", price: 300, tag: "PREMIUM", title: "צלמת בסטודיו", desc: "אופציה לצלמת בסטודיו — 2 סטים יפים בהתאמה אישית, עד שעה." },
-] as const;
-
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.6, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] as const } }),
 };
 
-// Full studio rules — shown inside the intake modal, matching the printed
-// coordination agreement so signing the checkbox = agreeing to everything.
+// Space-rental rules — shown inside the intake modal so signing the
+// checkbox = agreeing to everything. Pricing/hours are real (from the
+// owner); deposit/cancellation specifics are placeholders — TODO: replace
+// with the real policy numbers.
 const rulesBlocks: { title: string; items: string[] }[] = [
-  { title: "💳 מחירון וחישוב שעות", items: [
-    "שעת השכרה ראשונה: 120 ₪",
-    "כל שעה נוספת: 90 ₪",
-    "חצי שעה = חצי מהתעריף המתאים",
-    "מבצע 8:00–13:00 (ניו-בורן): 3 שעות ב-240 ₪",
-    "מינימום הזמנה: שעה (2 חצאי שעות)",
-    "עיכוב של 15 דק׳ ומעלה — יחויב כחצי שעה נוספת",
-    "עיכוב של 45 דק׳ ומעלה — יחויב כשעה מלאה נוספת",
-    "ספירת הזמן כוללת התארגנות וניקיון בסיום",
+  { title: "💳 מחירון", items: [
+    "70 ₪ לשעה",
+    "חצי שעה = חצי מהתעריף",
+    "מינימום הזמנה: שעה",
   ]},
-  { title: "📅 תשלום ומדיניות ביטולים", items: [
-    "שריון מועד: מקדמה 90 ₪ (לא מוחזרת)",
-    "העברה בנקאית: בנק 12, סניף 533, חשבון 648912 (מיכל סיבוני)",
-    "יש לשלוח צילום אישור העברה למייל לאישור השריון",
-    "הזמנה ליום ההגעה: תשלום מלא מראש",
-    "יתרה: אשראי / פייבוקס / העברה / מזומן בסיום",
-    "ביטול/שינוי עד ליום האירוע — המקדמה לא מוחזרת",
-    "ביטול ביום האירוע — חיוב מלא (100%)",
-  ]},
-  { title: "✨ ציוד ותאורה", items: [
-    "פלאש Godox AD200 PRO (סוללה נטענת)",
-    "משדרים ל-Canon ול-Sony",
-    "סופטבוקס בקוטר 1.65 מטר",
-    "מיזוג + מפזר חום ייעודי לניו-בורן",
-    "שידת החתלה חדשה עם עיטופים ובדים",
-    "קופסת ציוד: משדר, סוללה, שוֶשר, דבקים, אטבים",
-    "* השימוש בפלאש דורש ידע מוקדם",
-  ]},
-  { title: "🎨 רקעים ורצפות", items: [
-    "רקעים: ירוק, לבן (2.7), כחול, חום בהיר, חום כהה, צהוב (1.5)",
-    "רקעי נייר — לקירות בלבד",
-    "שימוש ברקע נייר גם כרצפה: +50 ₪ (יש לתאם מראש)",
-    "רקע שהתלכלך/נהרס: 100 ₪ למטר",
-    "רצפות ללא תוספת: פורמייקה, עץ, פרקט, קורות עץ",
+  { title: "📅 תשלום וביטולים", items: [
+    "פרטי מקדמה/ביטול — לעדכון",
   ]},
   { title: "🧹 סדר וניקיון", items: [
-    "הסטודיו נמסר נקי ומסודר — יש להחזירו למצבו המקורי",
-    "בלגן/לכלוך משמעותי — חיוב 150 ₪ דמי ניקיון",
-    "שירותים בקומה 5, דירה 18",
+    "החלל נמסר נקי ומסודר — יש להחזירו למצבו המקורי",
   ]},
   { title: "🛡️ אחריות ונזקים", items: [
-    "נזק לרכוש: עלות תיקון/רכישה + 20% דמי טיפול",
     "הבטיחות באחריות השוכר/ת בלבד",
-    "השארת אור/מזגן דולק — 7 ₪ לשעה עד 8:00 בבוקר למחרת",
-    "חפצים שיישכחו מעל 30 יום — יעברו למאגר הסטודיו",
+    "נזק לציוד/לחלל — באחריות השוכר/ת",
   ]},
 ];
 
 const quickFacts = [
-  { icon: Clock, label: "א׳–ה׳ 8:00–23:00" },
-  { icon: CreditCard, label: "מ-120 ₪ לשעה" },
-  { icon: CalendarDays, label: "מקדמה 90 ₪ לשריון" },
-  { icon: Sparkles, label: "Godox AD200 PRO" },
+  { icon: Clock, label: "8:00–12:00 · 16:00–18:00" },
+  { icon: CreditCard, label: "70 ₪ לשעה" },
 ];
 
 const INTAKE_DRAFT_KEY = "sb_studio_intake_draft";
 
 function StudioRentalPage() {
 
-  const studioGallery = usePageGallery(PAGE_IMAGE_KEYS.studioRental);
   const [showForm, setShowForm] = useState(false);
 
   const [form, setForm] = useState<IntakeForm>(emptyForm);
- const [submitting, setSubmitting] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const nav = useNavigate();
   const { user } = useAuth();
   const profile = useProfilePrefill();
@@ -165,11 +123,11 @@ function StudioRentalPage() {
       return;
     }
     if (!form.sessionType.trim()) {
-      toast.error("נא לבחור את סוג הצילום.");
+      toast.error("נא לבחור את מטרת השימוש בחלל.");
       return;
     }
     if (!form.agreed) {
-      toast.error("יש לאשר את הסכם תיאום הציפיות לפני השליחה.");
+      toast.error("יש לאשר את תנאי השימוש בחלל לפני השליחה.");
       return;
     }
     if (!user) {
@@ -179,7 +137,6 @@ function StudioRentalPage() {
       return;
     }
 
-    const guidanceLabel = guidanceOptions.find((g) => g.key === form.guidance);
     setSubmitting(true);
     try {
       await submitIntake({
@@ -191,11 +148,10 @@ function StudioRentalPage() {
           sessionDate: "",
           peopleCount: "",
           babyAge: "",
-          cameraBrand: [form.cameraBrand, form.cameraNeed && `מצלמה: ${form.cameraNeed}`].filter(Boolean).join(" · "),
-          flashExperience: form.flashExperience,
-          needProps: guidanceLabel ? `${guidanceLabel.tag} · ${guidanceLabel.title}${guidanceLabel.price ? ` (+₪${guidanceLabel.price})` : ""}` : "",
+          cameraBrand: "",
+          flashExperience: "",
+          needProps: "",
           specialRequests: form.specialRequests,
-
           agreed: true,
         },
       });
@@ -225,31 +181,16 @@ function StudioRentalPage() {
         <div aria-hidden className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)" }} />
 
         <div className="relative container-page pt-6 pb-8">
-          <div className="flex flex-wrap gap-3 justify-end mb-5">
-            <a
-              href="#studio-inspiration"
-              className="inline-flex items-center gap-2 h-11 px-5 rounded-full bg-[#e6e4e0] text-[#33363d] text-sm font-semibold hover:bg-[#efc7c0] transition-colors"
-            >
-              <Sparkles className="h-4 w-4" /> השראה מהסטודיו
-            </a>
-            <button
-              type="button"
-              onClick={() => setShowGuide(true)}
-              className="inline-flex items-center gap-2 h-11 px-5 rounded-full bg-[#33363d] text-[#f4f3f0] text-sm font-semibold hover:bg-[#33363d]/90 transition-colors"
-            >
-              <PlayCircle className="h-4 w-4" /> הדרכה לשימוש בסטודיו
-            </button>
-          </div>
           <motion.div initial="hidden" animate="show" variants={fadeUp} className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur px-4 py-1.5 border border-[#33363d]/10">
               <Star className="h-3.5 w-3.5 fill-[#d6d7da] text-[#d6d7da]" />
-              <span className="text-[15px] tracking-[0.18em] uppercase text-[#33363d]/70 font-medium">Studio Rental · בית שמש</span>
+              <span className="text-[15px] tracking-[0.18em] uppercase text-[#33363d]/70 font-medium">Space Rental · בית שמש</span>
             </div>
             <h1 className="mt-4 text-[2.4rem] leading-[1.05] md:text-[3.6rem] md:leading-[1] text-[#33363d]" style={{ fontFamily: "'DM Serif Display', serif" }}>
-              השכרת <em className="not-italic text-[#ea7c1e]">הסטודיו</em>
+              השכרת <em className="not-italic text-[#ea7c1e]">חלל הספורט</em>
             </h1>
             <p className="mt-3 text-base text-[#33363d]/75 max-w-2xl leading-relaxed">
-              חלל בוטיק שקט ומאובזר לצלמות — תאורה מקצועית, רקעים ואווירה שמזמינה יצירה. מחירון שקוף, יומן פתוח.
+              חלל מאובזר לאימונים אישיים, חוגים ואירועים — מחירון שקוף, יומן פתוח.
             </p>
 
             <div className="mt-5 flex flex-wrap gap-3">
@@ -261,7 +202,7 @@ function StudioRentalPage() {
               ))}
               <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur px-3.5 py-1.5 rounded-full border border-[#33363d]/10 text-xs text-[#33363d]/75">
                 <MapPin className="h-3.5 w-3.5 text-[#ea7c1e]" />
-                <span>תלמוד ירושלמי 24</span>
+                <span>לקיש 8, קומה -1</span>
               </div>
            </div>
           </motion.div>
@@ -271,41 +212,20 @@ function StudioRentalPage() {
 
       {/* PRICING */}
       <section className="container-page pb-6" dir="rtl">
-        <div className="grid md:grid-cols-2 gap-4 md:gap-5 max-w-3xl mx-auto">
+        <div className="max-w-md mx-auto">
           <motion.div
             initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.3 }} custom={0} variants={fadeUp}
             className="bg-white rounded-2xl border border-[#33363d]/10 px-4 py-5"
           >
             <div>
-              <div className="text-[14px] tracking-[0.16em] uppercase text-[#ea7c1e] mb-1">01 · Flexible</div>
-              <h3 className="text-lg text-[#33363d]" style={{ fontFamily: "'DM Serif Display', serif" }}>שעתי גמיש</h3>
+              <div className="text-[14px] tracking-[0.16em] uppercase text-[#ea7c1e] mb-1">Pricing</div>
+              <h3 className="text-lg text-[#33363d]" style={{ fontFamily: "'DM Serif Display', serif" }}>שעתי</h3>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl text-[#33363d]" style={{ fontFamily: "'DM Serif Display', serif" }}>₪120</span>
-                <span className="text-xs text-[#33363d]/60">/ שעה ראשונה</span>
+                <span className="text-2xl text-[#33363d]" style={{ fontFamily: "'DM Serif Display', serif" }}>₪70</span>
+                <span className="text-xs text-[#33363d]/60">/ שעה</span>
               </div>
-              <p className="mt-2 text-[14px] text-[#33363d]/75">כל שעה נוספת 90 ₪ · חצאי שעות בחישוב יחסי · מינימום שעה</p>
+              <p className="mt-2 text-[14px] text-[#33363d]/75">חצאי שעות בחישוב יחסי · מינימום שעה</p>
               <button type="button" onClick={() => setShowForm(true)} className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#33363d] text-[#f4f3f0] px-4 py-2 text-xs font-semibold">
-                לקביעת מועד <ArrowLeft className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.3 }} custom={1} variants={fadeUp}
-            className="bg-[#e6e4e0]/50 text-[#33363d] rounded-2xl border border-[#33363d]/10 px-4 py-5"
-          >
-            <div>
-              <div className="flex items-center justify-between">
-                <div className="text-[14px] tracking-[0.16em] uppercase text-[#ea7c1e] mb-1">02 · Morning</div>
-                <span className="text-[9px] tracking-[0.2em] uppercase bg-[#33363d] text-[#f4f3f0] px-2 py-0.5 rounded-full font-semibold">ניוברן</span>
-              </div>
-              <h3 className="text-lg" style={{ fontFamily: "'DM Serif Display', serif" }}>מבצע בוקר ניו-בורן</h3>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl" style={{ fontFamily: "'DM Serif Display', serif" }}>₪240</span>
-                <span className="text-xs text-[#33363d]/70">/ 3 שעות (8:00–13:00)</span>
-              </div>
-              <p className="mt-2 text-[14px] text-[#33363d]/80">3 שעות רצופות · חיסכון משמעותי מול תעריף שעתי</p>
-              <button type="button" onClick={() => { upd("sessionType", "ניו-בורן"); setShowForm(true); }} className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#33363d] text-[#f4f3f0] px-4 py-2 text-xs font-semibold">
                 לקביעת מועד <ArrowLeft className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -339,9 +259,9 @@ function StudioRentalPage() {
 
             <div className="mt-7 grid md:grid-cols-3 gap-3 md:gap-4">
               {[
-                { n: "01", title: "שאלון והסכם", desc: "ממלאים את הסכם תיאום הציפיות — פרטים, סוג הצילום ואישור כללי הסטודיו." },
-                { n: "02", title: "קביעת יומן", desc: "בוחרים תאריך ושעה פנויים ביומן החי, משך שהות ואביזרים לשריון (עד 20 חינם)." },
-                { n: "03", title: "תשלום מקדמה", desc: "מקדמה 90 ₪ לשריון המועד (ביום ההגעה — תשלום מלא). ואז הכל נסגר." },
+                { n: "01", title: "שאלון ואישור", desc: "ממלאים פרטים בסיסיים, מטרת השימוש ואישור תנאי החלל." },
+                { n: "02", title: "קביעת יומן", desc: "בוחרים תאריך ושעה פנויים ביומן החי, ומשך השהות." },
+                { n: "03", title: "תשלום", desc: "70 ₪ לשעה — פרטי תשלום ומקדמה ייקבעו איתך." },
               ].map((s) => (
                 <div key={s.n} className="rounded-2xl border border-[#33363d]/10 bg-white p-5">
                   <div className="text-[14px] tracking-[0.18em] uppercase text-[#ea7c1e] mb-1">Step {s.n}</div>
@@ -354,7 +274,7 @@ function StudioRentalPage() {
             <div className="mt-6 flex gap-3 items-start bg-[#f4f3f0] border border-[#33363d]/10 rounded-2xl p-4">
               <AlertTriangle className="h-5 w-5 text-[#8b3a2a] mt-0.5 shrink-0" />
               <div className="text-sm text-[#33363d]/85 leading-relaxed">
-                השאלון וההסכם הם השלב הראשון — מיד לאחר האישור נפתח היומן לבחירת שעה. אישור הטופס = הסכמה מלאה לכל תנאי הסטודיו.
+                השאלון הוא השלב הראשון — מיד לאחר האישור נפתח היומן לבחירת שעה. אישור הטופס = הסכמה מלאה לתנאי החלל.
               </div>
             </div>
 
@@ -383,53 +303,11 @@ function StudioRentalPage() {
         </motion.div>
 
 
-        <div className="mt-6 max-w-3xl mx-auto bg-white text-[#33363d] rounded-[2rem] border border-[#33363d]/10 px-4 py-5">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex-1 min-w-[240px]">
-              <div className="text-[15px] tracking-[0.18em] uppercase text-[#ea7c1e] mb-1">Add-on · חינם</div>
-              <h4 className="text-xl" style={{ fontFamily: "'DM Serif Display', serif" }}>צריכה גם אביזרים?</h4>
-              <p className="text-sm text-[#33363d]/80 mt-1 leading-relaxed">
-                <strong>עד 20 אביזרים שריון חינם</strong> לשעות ההשכרה בסטודיו — ללא תוספת תשלום.
-                אנו מתחייבים שכ-80% מהקטלוג יהיה בהישג יד בזמן הצילום (בכפוף לזמינות).
-              </p>
-              <p className="text-[15px] text-[#33363d]/60 mt-2">
-                רוצה לשריין אביזרים ספציפיים? ציין/י אותם בהערות בטופס תיאום הציפיות.
-              </p>
-            </div>
-            <div className="flex flex-col items-stretch gap-2">
-              <Link
-                to="/rental-catalog"
-                className="inline-flex items-center justify-center gap-2 bg-[#33363d] text-[#f4f3f0] px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-[#33363d]/90 transition-colors group whitespace-nowrap"
-              >
-                לצפייה בקטלוג
-                <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-1" />
-              </Link>
-              <a
-                href="#studio-inspiration"
-                className="inline-flex items-center justify-center gap-2 border border-[#33363d]/20 text-[#33363d] px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-[#f4f3f0] transition-colors whitespace-nowrap"
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                השראה מהסטודיו
-              </a>
-            </div>
-          </div>
-        </div>
-
       </section>
-<section className="container-page pb-4" dir="rtl">
+      <section className="container-page pb-12" dir="rtl">
         <ArrivalDirections className="max-w-4xl mx-auto" />
       </section>
-      <section id="studio-inspiration" className="container-page pb-12 scroll-mt-24">
-        <InspirationStrip
-          images={studioGallery.images}
 
-          title="השראה מהסטודיו"
-          subtitle="השכרת סטודיו — כך החלל נראה בפועל — תוכלי לקבל את אותה אווירה בצילומים שלך."
-        />
-      </section>
-
-
-    <StudioGuideModal open={showGuide} onClose={() => setShowGuide(false)} />
       <Footer />
 
       {/* INTAKE MODAL — includes the full studio rules */}
@@ -496,73 +374,14 @@ function StudioRentalPage() {
                 <input className={inputCls} dir="ltr" type="email" list="email-suggest-studio-rental" value={form.email} onChange={(e) => upd("email", e.target.value)} />
                 <EmailDatalist id="email-suggest-studio-rental" value={form.email} />
               </Field>
-              <Field label="סוג הצילום *">
+              <Field label="מטרת השימוש בחלל *">
                 <select className={inputCls} value={form.sessionType} onChange={(e) => upd("sessionType", e.target.value)} required>
-                  <option value="">בחרי…</option>
-                  <option>ניו-בורן</option>
-                  <option>משפחה</option>
-                  <option>הריון</option>
-                  <option>סמאש קייק / יום הולדת</option>
-                  <option>אישי / בוק תדמית</option>
+                  <option value="">בחרו…</option>
+                  <option>אימון אישי</option>
+                  <option>חוג / קבוצה</option>
+                  <option>אירוע</option>
                   <option>אחר</option>
                 </select>
-              </Field>
-              <Field label="מותג / דגם מצלמה">
-                <input className={inputCls} value={form.cameraBrand} onChange={(e) => upd("cameraBrand", e.target.value)} />
-              </Field>
-              <Field label="יש לך מצלמה או שצריכה מצלמה?">
-                <select className={inputCls} value={form.cameraNeed} onChange={(e) => upd("cameraNeed", e.target.value)}>
-                  <option value="">בחרי…</option>
-                  <option>יש לי מצלמה משלי</option>
-                  <option>צריכה מצלמה — Canon 5D Mark III מהסטודיו</option>
-                </select>
-                {form.cameraNeed.includes("צריכה") && (
-                  <span className="mt-1 block text-[15px] text-[#8b3a2a]">
-                    ניתן להכין עבורך מצלמת Canon 5D Mark III — חובה להביא כרטיס זיכרון.
-                  </span>
-                )}
-              </Field>
-              <Field label="ניסיון עם פלאש / סטודיו" full>
-                <select className={inputCls} value={form.flashExperience} onChange={(e) => upd("flashExperience", e.target.value)}>
-                  <option value="">בחרי…</option>
-                  <option>יש לי ניסיון עצמאי</option>
-                  <option>יש לי ניסיון בסיסי</option>
-                  <option>אין ניסיון — אשמח להדרכה</option>
-                </select>
-              </Field>
-
-              <Field label="הדרכה וליווי בסטודיו" full>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {guidanceOptions.map((g) => {
-                    const active = form.guidance === g.key;
-                    return (
-                      <button
-                        type="button"
-                        key={g.key}
-                        onClick={() => upd("guidance", g.key)}
-                        className={`relative text-right rounded-2xl border p-3 transition ${
-                          active
-                            ? "border-[#ea7c1e] bg-[#d6d7da]/25 shadow-sm"
-                            : "border-[#33363d]/15 bg-white/70 hover:border-[#ea7c1e]/50"
-                        }`}
-                      >
-                        {"featured" in g && g.featured && (
-                          <span className="absolute -top-2 left-3 rounded-full bg-[#e8b4bc] px-2 py-0.5 text-[14px] font-semibold text-[#33363d]">
-                            פופולרי
-                          </span>
-                        )}
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span className="text-xs font-bold tracking-wide">{g.tag}</span>
-                          <span className="text-xs font-semibold text-[#ea7c1e]">
-                            {g.price === 0 ? "ללא עלות" : `+₪${g.price}`}
-                          </span>
-                        </div>
-                        <div className="mt-1 text-sm font-medium">{g.title}</div>
-                        <p className="mt-1 text-[15px] leading-relaxed text-[#33363d]/70">{g.desc}</p>
-                      </button>
-                    );
-                  })}
-                </div>
               </Field>
 
               <Field label="בקשות מיוחדות / הערות" full>
@@ -578,7 +397,7 @@ function StudioRentalPage() {
                 checked={form.agreed}
                 onChange={(e) => upd("agreed", e.target.checked)}
               />
-              <span><strong>קראתי והסכמתי</strong> להסכם תיאום הציפיות ולכל כללי הסטודיו המפורטים מעלה (מחירון, ביטולים, ניקיון, אחריות ונזקים).</span>
+              <span><strong>קראתי והסכמתי</strong> לתנאי השימוש בחלל המפורטים מעלה (מחירון, ניקיון, אחריות ונזקים).</span>
             </label>
 
             <div className="mt-5 flex flex-wrap gap-3">

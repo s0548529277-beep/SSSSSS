@@ -16,7 +16,7 @@ export function ArrivalDirections({ className = "" }: { className?: string }) {
             <Car className="h-4 w-4 text-peach-deep" /> ברכב
           </div>
           <p>
-            לרשום בוויז: <span className="text-primary font-medium">תלמוד ירושלמי 24, בית שמש</span>.
+            לרשום בוויז: <span className="text-primary font-medium">לקיש 8, קומה -1, בית שמש</span>.
             <br />
             הסטודיו נמצא ב<span className="text-primary font-medium">חדר הכחול בחניה</span>.
           </p>

@@ -44,10 +44,10 @@ function PaymentFailed() {
 
             <div className="flex flex-wrap items-center justify-center gap-3 mb-8 text-sm">
               <a
-                href="tel:0548529277"
+                href="tel:0583258197"
                 className="inline-flex items-center gap-2 rounded-full border border-border px-5 h-11 hover:border-primary transition-colors text-primary"
               >
-                <Phone className="h-4 w-4" /> <span dir="ltr">054-8529277</span>
+                <Phone className="h-4 w-4" /> <span dir="ltr">058-3258197</span>
               </a>
               <a
                 href="mailto:s0548529277@gmail.com"

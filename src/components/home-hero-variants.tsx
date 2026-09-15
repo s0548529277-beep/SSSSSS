@@ -78,7 +78,7 @@ export function HeroFullBleed({ slide, setSlide, slides, logo }: HeroProps) {
 
         <div className="absolute top-6 right-6 z-20 hidden md:inline-flex items-center gap-2 rounded-full bg-[#33363d]/40 backdrop-blur-md px-4 py-2 border border-[#f4f3f0]/20">
           <MapPin className="h-3.5 w-3.5 text-[#d6d7da]" />
-          <span className="text-xs text-[#f4f3f0]/90 font-medium">בית שמש · מאז 2023</span>
+          <span className="text-xs text-[#f4f3f0]/90 font-medium">בית שמש · רח׳ לקיש 8</span>
         </div>
 
         {/* max-w-xl (not max-w-2xl) so the block sits further right
@@ -88,9 +88,9 @@ export function HeroFullBleed({ slide, setSlide, slides, logo }: HeroProps) {
             <motion.div initial="hidden" animate="show" variants={fadeUp} className="max-w-xl mr-0">
               <div className="flex flex-wrap gap-2 mb-5">
                 {[
-                  { label: "צילומים", to: "/studio-photography" },
-                  { label: "השכרת סטודיו", to: "/studio-rental" },
-                  { label: "אביזרים", to: "/rental-catalog" },
+                  { label: "השכרת חלל ספורט", to: "/studio-rental" },
+                  { label: "השכרת משרד", to: "/office-rental" },
+                  { label: "חוג התעמלות לילדות", to: "/girls-class" },
                 ].map((tag, i) => (
                   <Link
                     key={tag.label}
@@ -111,13 +111,13 @@ export function HeroFullBleed({ slide, setSlide, slides, logo }: HeroProps) {
               <img src={logo} alt="Sport Plus" className="h-14 md:h-20 w-auto mb-3" />
 
               <h1 className="text-5xl md:text-7xl lg:text-8xl leading-[1.05] text-[#f4f3f0]" style={{ fontFamily: "'DM Serif Display', serif" }}>
-                כאן נולדת התמונה
+                המרחב שלך
                 <br />
-                <span className="text-[#e6e4e0]">שתשאר איתך תמיד.</span>
+                <span className="text-[#e6e4e0]">לספורט, עבודה וגדילה.</span>
               </h1>
 
               <p className="mt-5 text-lg md:text-xl max-w-xl leading-relaxed text-[#f4f3f0]/85">
-                סטודיו לצילום עצמי להשכרה והשכרת אביזרים לצילום — בוטיק בבית שמש המשלב אמנות, רגש ועיצוב מוקפד.
+                חלל ספורט מאובזר להשכרה, משרד שקט עם מחשב וסינון נטפרי, וחוג התעמלות מקצועי לילדות — הכל תחת קורת גג אחת בבית שמש.
               </p>
 
               <div className="mt-7 flex flex-wrap items-center gap-4">
@@ -125,14 +125,14 @@ export function HeroFullBleed({ slide, setSlide, slides, logo }: HeroProps) {
                   to="/studio-rental"
                   className="group inline-flex items-center gap-3 rounded-full bg-[#e6e4e0] text-[#33363d] px-8 py-5 text-lg font-medium hover:bg-[#f4f3f0] transition-all hover:gap-4"
                 >
-                  <span>השכרת הסטודיו</span>
+                  <span>השכרת חלל הספורט</span>
                   <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
                 </Link>
                 <Link
-                  to="/rental-catalog"
+                  to="/office-rental"
                   className="inline-flex items-center gap-2 rounded-full border-2 border-[#f4f3f0]/40 text-[#f4f3f0] px-8 py-5 text-lg font-medium backdrop-blur-md hover:bg-[#f4f3f0]/10 transition-all"
                 >
-                  <Sparkles className="h-5 w-5" /> לקטלוג האביזרים
+                  <Sparkles className="h-5 w-5" /> השכרת משרד
                 </Link>
               </div>
             </motion.div>
@@ -144,9 +144,9 @@ export function HeroFullBleed({ slide, setSlide, slides, logo }: HeroProps) {
         <div className="container-page py-6">
           <div className="grid grid-cols-3 gap-4 md:gap-8">
             {[
-              { end: 400, suffix: "+", label: "אביזרים", icon: Sparkles },
-              { end: 3, suffix: "+ שנים", label: "מ-2023", icon: Clock },
-              { end: 1200, suffix: "+", label: "משפחות", icon: GradientHeartIcon },
+              { text: "8:00-12:00 · 16:00-18:00", label: "שעות פעילות", icon: Clock },
+              { text: "02-8081222", label: "טלפון", icon: Sparkles },
+              { text: "לקיש 8, קומה -1", label: "בית שמש", icon: GradientHeartIcon },
             ].map((s, i) => (
               <motion.div
                 key={s.label} custom={i} initial="hidden" animate="show" variants={fadeUp}
@@ -154,8 +154,8 @@ export function HeroFullBleed({ slide, setSlide, slides, logo }: HeroProps) {
               >
                 <s.icon className="h-5 w-5 mb-2 md:mb-0 text-[#d6d7da]" />
                 <div>
-                  <div className="text-2xl md:text-3xl text-[#f4f3f0]" style={{ fontFamily: "'DM Serif Display', serif" }}>
-                    <CountUp end={s.end} suffix={s.suffix} />
+                  <div className="text-xl md:text-2xl text-[#f4f3f0]" dir="ltr" style={{ fontFamily: "'DM Serif Display', serif" }}>
+                    {s.text}
                   </div>
                   <div className="text-xs tracking-wider uppercase mt-1 text-[#f4f3f0]/60">{s.label}</div>
                 </div>
@@ -169,7 +169,7 @@ export function HeroFullBleed({ slide, setSlide, slides, logo }: HeroProps) {
         <div className="marquee-track text-2xl md:text-3xl" style={{ fontFamily: "'DM Serif Display', serif" }}>
           {Array.from({ length: 2 }).map((_, k) => (
             <div key={k} className="flex items-center gap-12 pl-12">
-              {["ניוברן", "גיל שנה", "חלאקה", "משפחה", "הריון", "סמאש קייק"].flatMap((w, i) => [
+              {["אימון אישי", "התעמלות", "יוגה", "פילאטיס", "חוג בנות", "השכרת משרד"].flatMap((w, i) => [
                 <span key={`w-${k}-${i}`} className="whitespace-nowrap">{w}</span>,
                 <Sparkles key={`s-${k}-${i}`} className="h-5 w-5 text-[#ea7c1e] shrink-0" />,
               ])}
@@ -304,7 +304,7 @@ export function HeroLightArch({ slide, setSlide, slides, logo, aspect }: HeroPro
               </div>
               <div className="flex items-center gap-2 text-sm text-[#33363d]/70">
                 <MapPin className="h-4 w-4 text-[#ea7c1e]" />
-                תלמוד ירושלמי 24, בית שמש
+                לקיש 8, קומה -1, בית שמש
               </div>
             </button>
           </motion.div>

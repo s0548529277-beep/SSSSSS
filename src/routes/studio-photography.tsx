@@ -50,7 +50,7 @@ export const Route = createFileRoute("/studio-photography")({
   component: StudioPhotographyPage,
 });
 
-const PHONE = "0548529277";
+const PHONE = "0583258197";
 const EMAIL = "s0548529277@gmail.com";
 const MICHAL_SITE = "https://michalsiboni.co.il/";
 
@@ -508,7 +508,7 @@ function StudioPhotographyPage() {
                 href={telLink}
                 className="inline-flex items-center gap-2 bg-[#33363d] text-white px-7 py-3.5 rounded-full hover:bg-[#33363d]/90 transition"
               >
-                <Phone size={18} /> חיוג 054-8529277
+                <Phone size={18} /> חיוג 058-3258197
               </a>
               <a
                 href={gmailLink}

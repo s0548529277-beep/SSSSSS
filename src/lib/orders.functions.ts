@@ -526,7 +526,7 @@ export const confirmOrderDeposit = createServerFn({ method: "POST" })
       const html = buildPropsOrderSummaryHtml({
         heading: "אישור הזמנה — השכרת אביזרים ✓",
         intro:
-          "קיבלנו את התשלום/האסמכתא, וההזמנה מאושרת. למטה תמצאי סיכום מלא של ההזמנה, פרטי הגעה, וקובץ האסמכתא ששלחת מצורף להמשך תיעוד. נא לתאם טלפונית שעת איסוף מדויקת · 054-8529277.",
+          "קיבלנו את התשלום/האסמכתא, וההזמנה מאושרת. למטה תמצאי סיכום מלא של ההזמנה, פרטי הגעה, וקובץ האסמכתא ששלחת מצורף להמשך תיעוד. נא לתאם טלפונית שעת איסוף מדויקת · 058-3258197.",
         order: {
           id: o.id,
           contact_name: o.contact_name,
@@ -614,7 +614,7 @@ export const confirmOrderDeposit = createServerFn({ method: "POST" })
             /T\d{2}:/,
             `T${String(Math.min(23, Number(pickupTime.slice(0, 2)) + 1)).padStart(2, "0")}:`,
           ),
-          location: "תלמוד ירושלמי 24, בית שמש",
+          location: "לקיש 8, קומה -1, בית שמש",
           attendees: customerEmail ? [customerEmail] : [],
           transparent: true,
         });

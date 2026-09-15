@@ -124,13 +124,13 @@ function Terms() {
 
               <div>
                 <h2 className="font-display text-2xl md:text-3xl text-primary mb-4">מיקום</h2>
-                <p className="leading-relaxed text-foreground/90">תלמוד ירושלמי 24, בית שמש</p>
+                <p className="leading-relaxed text-foreground/90">לקיש 8, קומה -1, בית שמש</p>
               </div>
 
               <div>
                 <h2 className="font-display text-2xl md:text-3xl text-primary mb-4">מדיניות שירות ואספקה</h2>
                 <p className="leading-relaxed text-foreground/90">
-                  השירות ניתן במקום — הלקוח/ה מגיע/ה פיזית לסטודיו בכתובת תלמוד ירושלמי 24, בית שמש, לצורך שימוש
+                  השירות ניתן במקום — הלקוח/ה מגיע/ה פיזית לסטודיו בכתובת לקיש 8, קומה -1, בית שמש, לצורך שימוש
                   בסטודיו ובאביזרים המושכרים. אין משלוח או אספקה מרחוק — כל האיסוף וההחזרה של ציוד/אביזרים מתבצעים
                   במקום, בהתאם למועד ולשעות שסוכמו מראש.
                 </p>
@@ -165,7 +165,7 @@ function Terms() {
                 <Link to="/contact" className="underline underline-offset-4 text-foreground hover:text-peach-deep">
                   דף הצור קשר
                 </Link>{" "}
-                או בטלפון 054-8529277.
+                או בטלפון 058-3258197.
               </p>
             </div>
           </div>
