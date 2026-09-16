@@ -389,7 +389,9 @@ export const getPhotoClientDetail = createServerFn({ method: "POST" })
       booking = b;
     }
     if (!booking) {
-      const { data: profile } = await supabaseAdmin.from("profiles").select("full_name, phone").eq("id", workflow.user_id).maybeSingle();
+      const { data: profile } = workflow.user_id
+        ? await supabaseAdmin.from("profiles").select("full_name, phone").eq("id", workflow.user_id).maybeSingle()
+        : { data: null };
       booking = { id: workflow.id, contact_name: profile?.full_name || "—", contact_phone: profile?.phone || "—", session_date: null };
     }
 
@@ -509,7 +511,7 @@ export const advancePhotoClientStage = createServerFn({ method: "POST" })
       .eq("id", data.workflowId);
     if (error) throw new Error(error.message);
 
-    if (data.stage === "album_published" && before && before.stage !== "album_published") {
+    if (data.stage === "album_published" && before?.user_id && before.stage !== "album_published") {
       try {
         const {
           data: { user },
@@ -569,6 +571,7 @@ export async function runDueProofSelectionReminders(): Promise<{ checked: number
 
   let sent = 0;
   for (const w of candidates ?? []) {
+    if (!w.user_id) continue; // can't identify who to email without it
     try {
       const {
         data: { user },
