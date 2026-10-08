@@ -1,5 +1,5 @@
 import { heError } from "@/lib/he-errors";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -27,7 +27,6 @@ import {
   saveSiteIcon,
   SITE_ICON_PAGE,
   type PageImage,
-  PORTFOLIO_CATEGORIES,
 } from "@/lib/page-images";
 import noaAvatar from "@/assets/noa-chat-avatar.png";
 import heartIcon from "@/assets/heart-gradient.png";
@@ -35,6 +34,19 @@ import heartIcon from "@/assets/heart-gradient.png";
 export const Route = createFileRoute("/_authenticated/admin/gallery")({
   component: AdminGalleryPage,
 });
+
+const TABS = [
+  { key: PAGE_IMAGE_KEYS.studioRental, label: "השכרת סטודיו" },
+  { key: PAGE_IMAGE_KEYS.photographyStudio, label: "צילומים – בסטודיו" },
+  { key: PAGE_IMAGE_KEYS.photographyOutdoor, label: "צילומים – בטבע" },
+  { key: PAGE_IMAGE_KEYS.homeHero, label: "דף הבית – תמונות מתחלפות" },
+  { key: PAGE_IMAGE_KEYS.newborn, label: "ניו-בורן – דף נחיתה" },
+  { key: PAGE_IMAGE_KEYS.rentalInspiration, label: "השכרת אביזרים – תמונות מתחלפות" },
+  { key: PAGE_IMAGE_KEYS.about, label: "עלינו – תמונות" },
+  { key: CHATBOT_AVATAR_PAGE, label: "בוט הצ'אט – תמונת פרופיל" },
+  { key: SITE_ICON_PAGE, label: "סמל האתר (הלב)" },
+  { key: EMAIL_HEART_PAGE, label: "הלב במיילים" },
+] as const;
 
 /** Single "config row" image setting (chat bot avatar / site icon) —
  * upload replaces it, reset deletes the row so the bundled default takes
@@ -151,7 +163,7 @@ async function uploadToStorage(file: File) {
 
 function AdminGalleryPage() {
   const qc = useQueryClient();
-  const [page, setPage] = useState<string>(PORTFOLIO_CATEGORIES[0].key);
+  const [page, setPage] = useState<string>(PAGE_IMAGE_KEYS.studioRental);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
@@ -327,24 +339,20 @@ function AdminGalleryPage() {
         )}
       </div>
 
-      <div className="space-y-2">
-        <p className="text-xs text-muted-foreground">
-          הקטגוריות של עמוד "צילומי ניו-בורן" באתר (<Link to="/newborn-photography" className="underline">לצפייה בעמוד</Link>) — בוחרים קטגוריה ומעלים לה תמונות:
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {PORTFOLIO_CATEGORIES.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setPage(t.key)}
-              className={`px-5 h-10 rounded-full text-sm transition-colors border ${
-                page === t.key ? "bg-primary text-primary-foreground border-primary" : "bg-card border-primary/10 hover:bg-cream"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+      <div className="flex flex-wrap gap-2">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setPage(t.key)}
+            className={`px-4 h-10 rounded-full text-sm transition-colors border ${
+              page === t.key
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card border-primary/10 hover:bg-cream"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {page === PAGE_IMAGE_KEYS.homeHero && (
