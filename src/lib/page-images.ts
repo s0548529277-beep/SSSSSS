@@ -46,7 +46,21 @@ export const PAGE_IMAGE_KEYS = {
   rentalInspiration: "rental-inspiration",
   about: "about",
   newborn: "newborn",
+  portfolioOutdoor: "portfolio-outdoor",
+  portfolioStudio: "portfolio-studio",
+  portfolioNewborn: "portfolio-newborn",
+  portfolioYear: "portfolio-year",
+  portfolioCollage: "portfolio-collage",
 } as const;
+
+/** The five portfolio categories (public tab bar on /newborn-photography + the matching admin gallery chips), in display order. */
+export const PORTFOLIO_CATEGORIES = [
+  { key: PAGE_IMAGE_KEYS.portfolioOutdoor, label: "צילומי חוץ" },
+  { key: PAGE_IMAGE_KEYS.portfolioStudio, label: "סטודיו" },
+  { key: PAGE_IMAGE_KEYS.portfolioNewborn, label: "NEW BORN" },
+  { key: PAGE_IMAGE_KEYS.portfolioYear, label: "גיל שנה" },
+  { key: PAGE_IMAGE_KEYS.portfolioCollage, label: "קולאזיים" },
+] as const;
 
 export type PageImageKey = (typeof PAGE_IMAGE_KEYS)[keyof typeof PAGE_IMAGE_KEYS];
 
@@ -110,6 +124,8 @@ export function builtinEntries(page: string): { key: string; url: string }[] {
     return Object.entries(studioInspirationMap()).map(([key, url]) => ({ key, url }));
   }
   if (page === PAGE_IMAGE_KEYS.photographyStudio) return BUILTIN_PHOTOGRAPHY_STUDIO.map((u) => ({ key: u, url: u }));
+  if (page === PAGE_IMAGE_KEYS.portfolioOutdoor) return BUILTIN_PHOTOGRAPHY_OUTDOOR.map((u) => ({ key: u, url: u }));
+  if (page === PAGE_IMAGE_KEYS.portfolioStudio) return BUILTIN_PHOTOGRAPHY_STUDIO.map((u) => ({ key: u, url: u }));
   if (page === PAGE_IMAGE_KEYS.photographyOutdoor) return BUILTIN_PHOTOGRAPHY_OUTDOOR.map((u) => ({ key: u, url: u }));
   if (page === PAGE_IMAGE_KEYS.homeHero) return builtinHomeHero();
   // Deliberately no bundled fallback for newborn — per explicit request,
