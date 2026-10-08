@@ -1,5 +1,5 @@
 import { heError } from "@/lib/he-errors";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ import {
   saveSiteIcon,
   SITE_ICON_PAGE,
   type PageImage,
+  PORTFOLIO_CATEGORIES,
 } from "@/lib/page-images";
 import noaAvatar from "@/assets/noa-chat-avatar.png";
 import heartIcon from "@/assets/heart-gradient.png";
@@ -150,7 +151,7 @@ async function uploadToStorage(file: File) {
 
 function AdminGalleryPage() {
   const qc = useQueryClient();
-  const [page] = useState<string>(PAGE_IMAGE_KEYS.studioRental);
+  const [page, setPage] = useState<string>(PORTFOLIO_CATEGORIES[0].key);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
@@ -324,6 +325,26 @@ function AdminGalleryPage() {
             </button>
           </div>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">
+          הקטגוריות של עמוד "צילומי ניו-בורן" באתר (<Link to="/newborn-photography" className="underline">לצפייה בעמוד</Link>) — בוחרים קטגוריה ומעלים לה תמונות:
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {PORTFOLIO_CATEGORIES.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setPage(t.key)}
+              className={`px-5 h-10 rounded-full text-sm transition-colors border ${
+                page === t.key ? "bg-primary text-primary-foreground border-primary" : "bg-card border-primary/10 hover:bg-cream"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {page === PAGE_IMAGE_KEYS.homeHero && (

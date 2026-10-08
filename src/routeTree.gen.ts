@@ -21,6 +21,7 @@ import { Route as RentalCatalogRouteImport } from './routes/rental-catalog'
 import { Route as PhotoRetouchRouteImport } from './routes/photo-retouch'
 import { Route as PaymentFailedRouteImport } from './routes/payment-failed'
 import { Route as OfficeRentalRouteImport } from './routes/office-rental'
+import { Route as NewbornPhotographyRouteImport } from './routes/newborn-photography'
 import { Route as NewbornRouteImport } from './routes/newborn'
 import { Route as GirlsClassRouteImport } from './routes/girls-class'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -138,6 +139,11 @@ const PaymentFailedRoute = PaymentFailedRouteImport.update({
 const OfficeRentalRoute = OfficeRentalRouteImport.update({
   id: '/office-rental',
   path: '/office-rental',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewbornPhotographyRoute = NewbornPhotographyRouteImport.update({
+  id: '/newborn-photography',
+  path: '/newborn-photography',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewbornRoute = NewbornRouteImport.update({
@@ -471,6 +477,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/girls-class': typeof GirlsClassRoute
   '/newborn': typeof NewbornRouteWithChildren
+  '/newborn-photography': typeof NewbornPhotographyRoute
   '/office-rental': typeof OfficeRentalRoute
   '/payment-failed': typeof PaymentFailedRoute
   '/photo-retouch': typeof PhotoRetouchRoute
@@ -542,6 +549,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/girls-class': typeof GirlsClassRoute
   '/newborn': typeof NewbornRouteWithChildren
+  '/newborn-photography': typeof NewbornPhotographyRoute
   '/office-rental': typeof OfficeRentalRoute
   '/payment-failed': typeof PaymentFailedRoute
   '/photo-retouch': typeof PhotoRetouchRoute
@@ -614,6 +622,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/girls-class': typeof GirlsClassRoute
   '/newborn': typeof NewbornRouteWithChildren
+  '/newborn-photography': typeof NewbornPhotographyRoute
   '/office-rental': typeof OfficeRentalRoute
   '/payment-failed': typeof PaymentFailedRoute
   '/photo-retouch': typeof PhotoRetouchRoute
@@ -687,6 +696,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/girls-class'
     | '/newborn'
+    | '/newborn-photography'
     | '/office-rental'
     | '/payment-failed'
     | '/photo-retouch'
@@ -758,6 +768,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/girls-class'
     | '/newborn'
+    | '/newborn-photography'
     | '/office-rental'
     | '/payment-failed'
     | '/photo-retouch'
@@ -829,6 +840,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/girls-class'
     | '/newborn'
+    | '/newborn-photography'
     | '/office-rental'
     | '/payment-failed'
     | '/photo-retouch'
@@ -902,6 +914,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   GirlsClassRoute: typeof GirlsClassRoute
   NewbornRoute: typeof NewbornRouteWithChildren
+  NewbornPhotographyRoute: typeof NewbornPhotographyRoute
   OfficeRentalRoute: typeof OfficeRentalRoute
   PaymentFailedRoute: typeof PaymentFailedRoute
   PhotoRetouchRoute: typeof PhotoRetouchRoute
@@ -1013,6 +1026,13 @@ declare module '@tanstack/react-router' {
       path: '/office-rental'
       fullPath: '/office-rental'
       preLoaderRoute: typeof OfficeRentalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/newborn-photography': {
+      id: '/newborn-photography'
+      path: '/newborn-photography'
+      fullPath: '/newborn-photography'
+      preLoaderRoute: typeof NewbornPhotographyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/newborn': {
@@ -1557,6 +1577,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   GirlsClassRoute: GirlsClassRoute,
   NewbornRoute: NewbornRouteWithChildren,
+  NewbornPhotographyRoute: NewbornPhotographyRoute,
   OfficeRentalRoute: OfficeRentalRoute,
   PaymentFailedRoute: PaymentFailedRoute,
   PhotoRetouchRoute: PhotoRetouchRoute,
