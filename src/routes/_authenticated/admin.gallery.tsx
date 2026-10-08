@@ -36,16 +36,6 @@ export const Route = createFileRoute("/_authenticated/admin/gallery")({
   component: AdminGalleryPage,
 });
 
-const OTHER_TABS = [
-  { key: PAGE_IMAGE_KEYS.studioRental, label: "השכרת סטודיו" },
-  { key: PAGE_IMAGE_KEYS.homeHero, label: "דף הבית – תמונות מתחלפות" },
-  { key: PAGE_IMAGE_KEYS.rentalInspiration, label: "השכרת אביזרים – תמונות מתחלפות" },
-  { key: PAGE_IMAGE_KEYS.about, label: "עלינו – תמונות" },
-  { key: CHATBOT_AVATAR_PAGE, label: "בוט הצ'אט – תמונת פרופיל" },
-  { key: SITE_ICON_PAGE, label: "סמל האתר (הלב)" },
-  { key: EMAIL_HEART_PAGE, label: "הלב במיילים" },
-] as const;
-
 /** Single "config row" image setting (chat bot avatar / site icon) —
  * upload replaces it, reset deletes the row so the bundled default takes
  * over again. Shared by both single-image tabs below to avoid duplicating
@@ -348,24 +338,6 @@ function AdminGalleryPage() {
               type="button"
               onClick={() => setPage(t.key)}
               className={`px-5 h-10 rounded-full text-sm transition-colors border ${
-                page === t.key ? "bg-primary text-primary-foreground border-primary" : "bg-card border-primary/10 hover:bg-cream"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-xs text-muted-foreground">הגדרות ותמונות נוספות באתר:</p>
-        <div className="flex flex-wrap gap-2">
-          {OTHER_TABS.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setPage(t.key)}
-              className={`px-4 h-9 rounded-full text-xs transition-colors border ${
                 page === t.key ? "bg-primary text-primary-foreground border-primary" : "bg-card border-primary/10 hover:bg-cream"
               }`}
             >
