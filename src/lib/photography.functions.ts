@@ -3,7 +3,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { PHOTOGRAPHY_HOURLY_RATE, PAYMENT_LABELS } from "@/lib/photography-options";
 import { ARRIVAL_TEXT_HE } from "@/lib/arrival";
-import { NEWBORN_PACKAGES } from "@/lib/newborn-packages";
 
 
 const schema = z.object({
@@ -17,10 +16,6 @@ const schema = z.object({
   session_type: z.string().max(80).optional().nullable(),
   location: z.enum(["studio", "outdoor"]).default("studio"),
   notes: z.string().max(1000).optional().nullable(),
-  // Optional newborn package id — the price is resolved server-side from
-  // NEWBORN_PACKAGES (never trusted from the client) so income/finance
-  // reflect the real package price instead of hours × hourly rate.
-  package_id: z.string().max(40).optional().nullable(),
 });
 
 
@@ -35,8 +30,7 @@ export const requestPhotographySession = createServerFn({ method: "POST" })
     const startMin = h * 60 + m;
     const endMin = startMin + slots * 30;
     const endTime = `${String(Math.floor(endMin / 60)).padStart(2, "0")}:${String(endMin % 60).padStart(2, "0")}`;
-    const chosenPackage = data.package_id ? NEWBORN_PACKAGES.find((p) => p.id === data.package_id) : undefined;
-    const price = chosenPackage ? chosenPackage.price : Math.round(PHOTOGRAPHY_HOURLY_RATE * data.hours);
+    const price = Math.round(PHOTOGRAPHY_HOURLY_RATE * data.hours);
 
     const { data: existing, error: exErr } = await supabase
       .from("bookings")
@@ -74,7 +68,6 @@ export const requestPhotographySession = createServerFn({ method: "POST" })
         notes: [
           `📸 צילומים עם מיכל סיבוני (${data.location === "outdoor" ? "צילומי חוץ" : "בסטודיו"})`,
           data.session_type ? `סוג צילום: ${data.session_type}` : null,
-          chosenPackage ? `חבילה: ${chosenPackage.name} (₪${chosenPackage.price})` : null,
           `אמצעי תשלום: ${PAYMENT_LABELS[data.payment_method] ?? data.payment_method}`,
           "המועד ייקבע סופית לאחר תיאום עם הצלמת.",
           data.notes,
